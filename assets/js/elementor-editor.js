@@ -490,16 +490,25 @@
 
 
     /**
-     * Initialise once Elementor is ready.
-     */
-    $(window).on(
-        'elementor:init',
-        function () {
+ * Initialise once Elementor is ready.
+ */
+function initOIS() {
 
-            OIS.init();
+    if (
+        window.elementor &&
+        window.elementor.channels &&
+        window.elementor.channels.editor &&
+        window.elementor.hooks
+    ) {
+        OIS.init();
+    }
 
-        }
-    );
+}
+
+$(window).on('elementor:init', initOIS);
+
+// Also initialise if Elementor is already ready.
+initOIS();
 
 
 })(jQuery);
