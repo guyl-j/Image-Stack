@@ -1,8 +1,7 @@
-
 /**
  * Offer Image Stack
  * Elementor Editor Integration
- * Version: 2.3.0
+ * Version: 2.5.1
  */
 
 (function ($) {
@@ -26,9 +25,7 @@
 
         toPlainObject: function (item) {
 
-            if (!item) {
-                return {};
-            }
+            if (!item) return {};
 
             if (typeof item.toJSON === 'function') {
                 return item.toJSON();
@@ -38,10 +35,162 @@
 
         },
 
-        /**
-         * Find Elementor preview documents.
-         */
-        getDocuments: function () {
+        getSettings: function (model) {
+
+            if (!model || typeof model.get !== 'function') {
+                return {};
+            }
+
+            return this.toPlainObject(
+                model.get('settings')
+            );
+
+        },
+
+        getConnectionId: function (attributes) {
+
+            if (!attributes) return null;
+
+            if (typeof attributes !== 'string') {
+
+                if (typeof attributes.toJSON === 'function') {
+                    attributes = attributes.toJSON();
+                }
+
+                if (typeof attributes !== 'string') {
+                    return null;
+                }
+
+            }
+
+            const lines = attributes.split(/\r?\n/);
+
+            for (const line of lines) {
+
+                const parts = line.trim().split('|');
+
+                if (
+                    parts.length >= 2 &&
+                    parts[0].trim() === 'data-offer-stack'
+                ) {
+                    return parts.slice(1).join('|').trim();
+                }
+
+            }
+
+            return null;
+
+        },
+
+        getEditorDocuments: function () {
+
+            const documents = [];
+            const editor = window.elementor;
+
+            const roots = editor?.elements?.models || [];
+
+            if (roots.length) {
+
+                documents.push({
+                    id: 'main',
+                    models: roots
+                });
+
+            }
+
+            const registered =
+                editor?.documents?.documents || {};
+
+            Object.keys(registered).forEach(function (key) {
+
+                const entry = registered[key];
+
+                const doc =
+                    entry?.getCurrentPageView?.() ||
+                    entry?.container ||
+                    entry;
+
+                const elements =
+                    doc?.model?.get?.('elements') ||
+                    doc?.elements ||
+                    doc?.model?.elements;
+
+                if (elements?.models) {
+
+                    documents.push({
+                        id: key,
+                        models: elements.models
+                    });
+
+                }
+
+            });
+
+            return documents;
+
+        },
+
+        getEditorIconLists: function () {
+
+            const documents = this.getEditorDocuments();
+
+            const results = [];
+            const visited = new Set();
+
+            function inspect(models, documentId) {
+
+                if (!models) return;
+
+                models.forEach(function (model) {
+
+                    if (!model || visited.has(model)) return;
+
+                    visited.add(model);
+
+                    const widgetType = model.get?.('widgetType');
+
+                    if (widgetType === 'icon-list') {
+
+                        const settings = OIS.getSettings(model);
+
+                        results.push({
+
+                            id: model.get('id'),
+                            model: model,
+                            documentId: documentId,
+                            settings: settings,
+
+                            connectionId: OIS.getConnectionId(
+                                settings._attributes
+                            ),
+
+                            items: settings.icon_list || []
+
+                        });
+
+                    }
+
+                    const children = model.get?.('elements');
+
+                    if (children?.models) {
+                        inspect(children.models, documentId);
+                    }
+
+                });
+
+            }
+
+            documents.forEach(function (entry) {
+
+                inspect(entry.models, entry.id);
+
+            });
+
+            return results;
+
+        },
+
+        getPreviewDocuments: function () {
 
             const documents = [];
 
@@ -60,7 +209,7 @@
                 } catch (error) {
 
                     console.warn(
-                        'OIS: Could not access preview iframe.',
+                        'OIS: Preview iframe unavailable.',
                         error
                     );
 
@@ -74,175 +223,99 @@
 
         },
 
-        /**
-         * Find connected Icon List.
-         */
-        findConnectedList: function (connectionId) {
+        getPreviewIconLists: function () {
 
-            if (!connectionId) {
-                return null;
-            }
+            const results = [];
 
-            const documents = this.getDocuments();
+            this.getPreviewDocuments().forEach(function (doc) {
 
-            for (const doc of documents) {
+                if (!doc?.querySelectorAll) return;
 
-                if (!doc || !doc.querySelectorAll) {
-                    continue;
-                }
-
-                const elements = doc.querySelectorAll(
-                    '[data-offer-stack]'
-                );
-
-                for (const element of elements) {
-
-                    const elementConnection = (
-                        element.getAttribute('data-offer-stack') || ''
-                    ).trim();
-
-                    if (elementConnection !== connectionId) {
-                        continue;
-                    }
-
-                    if (
-                        element.matches('.elementor-icon-list-items')
-                    ) {
-                        return element;
-                    }
-
-                    if (
-                        element.matches('.elementor-widget-icon-list')
-                    ) {
-
-                        const list = element.querySelector(
-                            '.elementor-icon-list-items'
-                        );
-
-                        if (list) {
-                            return list;
-                        }
-
-                    }
-
-                    const nestedList = element.querySelector(
-                        '.elementor-icon-list-items'
-                    );
-
-                    if (nestedList) {
-                        return nestedList;
-                    }
-
-                }
-
-                const iconWidgets = doc.querySelectorAll(
+                const widgets = doc.querySelectorAll(
                     '.elementor-widget-icon-list'
                 );
 
-                for (const widget of iconWidgets) {
-
-                    const attribute = (
-                        widget.getAttribute('data-offer-stack') || ''
-                    ).trim();
-
-                    if (attribute !== connectionId) {
-                        continue;
-                    }
+                widgets.forEach(function (widget) {
 
                     const list = widget.querySelector(
                         '.elementor-icon-list-items'
                     );
 
-                    if (list) {
-                        return list;
-                    }
+                    results.push({
 
-                }
+                        id: widget.dataset.id || null,
+                        element: widget,
+                        list: list,
 
-            }
+                        connectionId: widget.getAttribute(
+                            'data-offer-stack'
+                        ),
 
-            return null;
+                        document: doc
 
-        },
+                    });
 
-        /**
-         * Diagnose failed Icon List lookup.
-         */
-        diagnoseLookup: function (connectionId) {
-
-            console.group(
-                'OIS: Icon List lookup diagnostic'
-            );
-
-            console.log(
-                'Expected Connection ID:',
-                connectionId
-            );
-
-            this.getDocuments().forEach(function (doc, index) {
-
-                console.group('Document ' + index);
-
-                console.log(
-                    'URL:',
-                    doc.location ? doc.location.href : 'Unknown'
-                );
-
-                console.log(
-                    'Elements with data-offer-stack:',
-                    Array.from(
-                        doc.querySelectorAll('[data-offer-stack]')
-                    ).map(function (element) {
-
-                        return {
-                            tag: element.tagName,
-                            className: element.className,
-                            connection: element.getAttribute(
-                                'data-offer-stack'
-                            )
-                        };
-
-                    })
-                );
-
-                console.log(
-                    'Icon List widgets:',
-                    doc.querySelectorAll(
-                        '.elementor-widget-icon-list'
-                    ).length
-                );
-
-                console.log(
-                    'Icon List containers:',
-                    doc.querySelectorAll(
-                        '.elementor-icon-list-items'
-                    ).length
-                );
-
-                console.groupEnd();
+                });
 
             });
 
-            console.groupEnd();
+            return results;
 
         },
 
-        /**
-         * Read Icon List labels.
-         */
-        getLabels: function (list) {
+        findEditorIconList: function (connectionId) {
 
-            if (!list) {
+            if (!connectionId) return null;
+
+            return this.getEditorIconLists().find(
+                function (list) {
+                    return list.connectionId === connectionId;
+                }
+            ) || null;
+
+        },
+
+        findPreviewIconList: function (connectionId) {
+
+            if (!connectionId) return null;
+
+            return this.getPreviewIconLists().find(
+                function (list) {
+                    return list.connectionId === connectionId;
+                }
+            ) || null;
+
+        },
+
+        getModelLabels: function (editorList) {
+
+            if (!editorList || !editorList.items) {
                 return [];
             }
 
-            const items = Array.from(
-                list.querySelectorAll(
+            return editorList.items.map(function (item, index) {
+
+                const label = String(
+                    item.text || ''
+                ).replace(/\s+/g, ' ').trim();
+
+                return label || 'Item ' + (index + 1);
+
+            });
+
+        },
+
+        getPreviewLabels: function (previewList) {
+
+            if (!previewList || !previewList.list) {
+                return [];
+            }
+
+            return Array.from(
+                previewList.list.querySelectorAll(
                     ':scope > .elementor-icon-list-item'
                 )
-            );
-
-            return items.map(function (item, index) {
+            ).map(function (item, index) {
 
                 const textElement = item.querySelector(
                     '.elementor-icon-list-text'
@@ -260,16 +333,65 @@
 
         },
 
-        /**
-         * Read existing image entries.
-         */
-        getExistingOffers: function (model) {
+        diagnoseIconLists: function () {
+
+            const editorLists = this.getEditorIconLists();
+
+            const previewLists = this.getPreviewIconLists();
+
+            console.group(
+                'OIS: Icon List discovery diagnostic'
+            );
+
+            console.log(
+                'Editor Icon Lists:',
+                editorLists.length
+            );
+
+            console.log(
+                'Preview Icon Lists:',
+                previewLists.length
+            );
+
+            console.table(
+                editorLists.map(function (item) {
+
+                    return {
+                        id: item.id,
+                        document: item.documentId,
+                        connectionID: item.connectionId,
+                        itemCount: item.items.length
+                    };
+
+                })
+            );
+
+            console.table(
+                previewLists.map(function (item) {
+
+                    return {
+                        previewID: item.id,
+                        previewConnection: item.connectionId,
+                        renderedListFound: !!item.list
+                    };
+
+                })
+            );
+
+            console.groupEnd();
+
+            return {
+                editorLists: editorLists,
+                previewLists: previewLists
+            };
+
+        },
+		
+		        getExistingOffers: function (model) {
 
             const settings = model.get('settings');
 
-            if (!settings) {
-                return [];
-            }
+            if (!settings) return [];
 
             let offers = settings.get('offers') || [];
 
@@ -282,16 +404,11 @@
             }
 
             return offers.map(function (offer) {
-
                 return OIS.toPlainObject(offer);
-
             });
 
         },
 
-        /**
-         * Match existing images against labels.
-         */
         synchroniseOffers: function (labels, existingOffers) {
 
             const lookup = new Map();
@@ -302,9 +419,7 @@
                     offer.offer_name || ''
                 );
 
-                if (!key) {
-                    return;
-                }
+                if (!key) return;
 
                 if (!lookup.has(key)) {
                     lookup.set(key, []);
@@ -352,9 +467,6 @@
 
         },
 
-        /**
-         * Display Elementor notification.
-         */
         notify: function (message, type) {
 
             const editor = window.elementor;
@@ -366,10 +478,8 @@
             ) {
 
                 editor.notifications.showToast({
-
                     message: message,
                     type: type || 'info'
-
                 });
 
             } else {
@@ -380,17 +490,16 @@
 
         },
 
-        /**
-         * Update Elementor widget model.
-         */
         updateWidget: function (model, offers) {
 
             const settings = model.get('settings');
 
             if (!settings) {
+
                 throw new Error(
                     'Widget settings are unavailable.'
                 );
+
             }
 
             if (typeof model.setSetting === 'function') {
@@ -411,14 +520,9 @@
 
         },
 
-        /**
-         * Perform synchronisation.
-         */
         sync: function () {
 
-            if (this.syncing) {
-                return;
-            }
+            if (this.syncing) return;
 
             const model = this.activeModel;
 
@@ -432,6 +536,8 @@
                 return;
 
             }
+
+            this.syncing = true;
 
             try {
 
@@ -463,42 +569,36 @@
                     connectionId
                 );
 
-                const list = this.findConnectedList(
+                const editorList = this.findEditorIconList(
                     connectionId
                 );
 
-                if (!list) {
+                const previewList = this.findPreviewIconList(
+                    connectionId
+                );
 
-                    this.diagnoseLookup(connectionId);
+                let labels = [];
+
+                if (editorList) {
+                    labels = this.getModelLabels(editorList);
+                }
+
+                if (!labels.length && previewList) {
+                    labels = this.getPreviewLabels(previewList);
+                }
+
+                if (!labels.length) {
+
+                    this.diagnoseIconLists();
 
                     this.notify(
-                        'Icon List not found. Check the browser console (F12) for diagnostics.',
+                        'Connected Icon List not found or contains no items. Check the Connection ID and data-offer-stack attribute.',
                         'danger'
                     );
 
                     return;
 
                 }
-
-                const labels = this.getLabels(list);
-
-                console.log(
-                    'OIS: Detected labels:',
-                    labels
-                );
-
-                if (!labels.length) {
-
-                    this.notify(
-                        'The connected Icon List contains no items.',
-                        'warning'
-                    );
-
-                    return;
-
-                }
-
-                this.syncing = true;
 
                 const existingOffers = this.getExistingOffers(
                     model
@@ -518,7 +618,8 @@
                     'OIS: Synchronisation successful.',
                     {
                         connectionId: connectionId,
-                        iconListCount: labels.length,
+                        editorModelFound: !!editorList,
+                        previewWidgetID: previewList?.id || null,
                         previousImageCount: existingOffers.length,
                         newImageCount: syncedOffers.length,
                         labels: labels,
@@ -529,7 +630,7 @@
                 this.notify(
                     'Successfully synced ' +
                     syncedOffers.length +
-                    ' images. Matching uploaded images have been preserved.',
+                    ' offers. Matching uploaded images have been preserved.',
                     'success'
                 );
 
@@ -552,15 +653,10 @@
             }
 
         },
+		
+		        init: function () {
 
-        /**
-         * Register Elementor editor integration.
-         */
-        init: function () {
-
-            if (this.initialized) {
-                return;
-            }
+            if (this.initialized) return;
 
             const editor = window.elementor;
 
@@ -609,6 +705,23 @@
                 }
             );
 
+            editor.hooks.addAction(
+                'panel/open_editor',
+                function (panel, model) {
+
+                    if (
+                        model &&
+                        model.get &&
+                        model.get('widgetType') !== 'offer-image-stack'
+                    ) {
+
+                        OIS.activeModel = null;
+
+                    }
+
+                }
+            );
+
             editor.channels.editor.on(
                 'ois:sync-icon-list',
                 function () {
@@ -623,7 +736,8 @@
             );
 
             console.log(
-                'OIS: Elementor editor integration loaded.'
+                'OIS: Elementor editor integration loaded.',
+                'Version 2.5.1'
             );
 
         }
@@ -631,20 +745,21 @@
     };
 
 
-    /**
-     * Initialise Elementor integration.
-     */
     function initOIS() {
-
         OIS.init();
-
     }
+
 
     $(window).on(
         'elementor:init.ois elementor:loaded.ois',
         initOIS
     );
 
+
     initOIS();
+
+
+    window.OIS = OIS;
+
 
 })(jQuery);
