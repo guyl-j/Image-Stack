@@ -2,10 +2,11 @@
 /**
  * Offer Image Stack
  * Elementor Editor Integration
- * Version: 2.2.0
+ * Version: 2.3.0
  */
 
 (function ($) {
+
     'use strict';
 
     const OIS = {
@@ -14,9 +15,6 @@
         syncing: false,
         initialized: false,
 
-        /**
-         * Normalise text for matching existing images.
-         */
         normaliseText: function (text) {
 
             return String(text || '')
@@ -26,10 +24,6 @@
 
         },
 
-        /**
-         * Convert a Backbone model or collection item
-         * into a plain JavaScript object.
-         */
         toPlainObject: function (item) {
 
             if (!item) {
@@ -45,7 +39,7 @@
         },
 
         /**
-         * Find the Elementor preview documents.
+         * Find Elementor preview documents.
          */
         getDocuments: function () {
 
@@ -59,17 +53,14 @@
 
                 try {
 
-                    if (
-                        iframe.contentDocument &&
-                        iframe.contentDocument.readyState !== 'loading'
-                    ) {
+                    if (iframe.contentDocument) {
                         documents.push(iframe.contentDocument);
                     }
 
                 } catch (error) {
 
                     console.warn(
-                        'OIS: Could not access Elementor preview.',
+                        'OIS: Could not access preview iframe.',
                         error
                     );
 
@@ -79,13 +70,12 @@
 
             documents.push(document);
 
-            return documents;
+            return [...new Set(documents)];
 
         },
 
         /**
-         * Find the native Elementor Icon List
-         * matching the Connection ID.
+         * Find connected Icon List.
          */
         findConnectedList: function (connectionId) {
 
@@ -96,6 +86,10 @@
             const documents = this.getDocuments();
 
             for (const doc of documents) {
+
+                if (!doc || !doc.querySelectorAll) {
+                    continue;
+                }
 
                 const elements = doc.querySelectorAll(
                     '[data-offer-stack]'
@@ -111,17 +105,51 @@
                         continue;
                     }
 
-                    /*
-                     * Support the attribute being applied
-                     * directly to the list or its parent widget.
-                     */
                     if (
                         element.matches('.elementor-icon-list-items')
                     ) {
                         return element;
                     }
 
-                    const list = element.querySelector(
+                    if (
+                        element.matches('.elementor-widget-icon-list')
+                    ) {
+
+                        const list = element.querySelector(
+                            '.elementor-icon-list-items'
+                        );
+
+                        if (list) {
+                            return list;
+                        }
+
+                    }
+
+                    const nestedList = element.querySelector(
+                        '.elementor-icon-list-items'
+                    );
+
+                    if (nestedList) {
+                        return nestedList;
+                    }
+
+                }
+
+                const iconWidgets = doc.querySelectorAll(
+                    '.elementor-widget-icon-list'
+                );
+
+                for (const widget of iconWidgets) {
+
+                    const attribute = (
+                        widget.getAttribute('data-offer-stack') || ''
+                    ).trim();
+
+                    if (attribute !== connectionId) {
+                        continue;
+                    }
+
+                    const list = widget.querySelector(
                         '.elementor-icon-list-items'
                     );
 
@@ -138,11 +166,69 @@
         },
 
         /**
-         * Read every native Icon List item.
-         *
-         * Blank labels receive a fallback name so that
-         * the number of generated entries always matches
-         * the number of Icon List items.
+         * Diagnose failed Icon List lookup.
+         */
+        diagnoseLookup: function (connectionId) {
+
+            console.group(
+                'OIS: Icon List lookup diagnostic'
+            );
+
+            console.log(
+                'Expected Connection ID:',
+                connectionId
+            );
+
+            this.getDocuments().forEach(function (doc, index) {
+
+                console.group('Document ' + index);
+
+                console.log(
+                    'URL:',
+                    doc.location ? doc.location.href : 'Unknown'
+                );
+
+                console.log(
+                    'Elements with data-offer-stack:',
+                    Array.from(
+                        doc.querySelectorAll('[data-offer-stack]')
+                    ).map(function (element) {
+
+                        return {
+                            tag: element.tagName,
+                            className: element.className,
+                            connection: element.getAttribute(
+                                'data-offer-stack'
+                            )
+                        };
+
+                    })
+                );
+
+                console.log(
+                    'Icon List widgets:',
+                    doc.querySelectorAll(
+                        '.elementor-widget-icon-list'
+                    ).length
+                );
+
+                console.log(
+                    'Icon List containers:',
+                    doc.querySelectorAll(
+                        '.elementor-icon-list-items'
+                    ).length
+                );
+
+                console.groupEnd();
+
+            });
+
+            console.groupEnd();
+
+        },
+
+        /**
+         * Read Icon List labels.
          */
         getLabels: function (list) {
 
@@ -152,7 +238,7 @@
 
             const items = Array.from(
                 list.querySelectorAll(
-                    '.elementor-icon-list-item'
+                    ':scope > .elementor-icon-list-item'
                 )
             );
 
@@ -175,7 +261,7 @@
         },
 
         /**
-         * Read existing Image Stack repeater entries.
+         * Read existing image entries.
          */
         getExistingOffers: function (model) {
 
@@ -204,11 +290,7 @@
         },
 
         /**
-         * Match existing images against Icon List labels.
-         *
-         * Matching images are preserved.
-         * New labels receive empty image placeholders.
-         * Duplicate labels are handled independently.
+         * Match existing images against labels.
          */
         synchroniseOffers: function (labels, existingOffers) {
 
@@ -238,9 +320,6 @@
 
                 const matches = lookup.get(key);
 
-                /*
-                 * Preserve an existing matching entry.
-                 */
                 if (matches && matches.length) {
 
                     const existing = matches.shift();
@@ -248,18 +327,13 @@
                     return Object.assign({}, existing, {
 
                         offer_name: label,
-
                         image_alt: label,
-
                         label_key: key
 
                     });
 
                 }
 
-                /*
-                 * Create a new image entry.
-                 */
                 return {
 
                     offer_name: label,
@@ -270,7 +344,6 @@
                     },
 
                     image_alt: label,
-
                     label_key: key
 
                 };
@@ -280,7 +353,7 @@
         },
 
         /**
-         * Display an Elementor notification.
+         * Display Elementor notification.
          */
         notify: function (message, type) {
 
@@ -295,7 +368,6 @@
                 editor.notifications.showToast({
 
                     message: message,
-
                     type: type || 'info'
 
                 });
@@ -309,7 +381,7 @@
         },
 
         /**
-         * Update the Elementor widget model.
+         * Update Elementor widget model.
          */
         updateWidget: function (model, offers) {
 
@@ -323,17 +395,11 @@
 
             if (typeof model.setSetting === 'function') {
 
-                model.setSetting(
-                    'offers',
-                    offers
-                );
+                model.setSetting('offers', offers);
 
             } else if (typeof settings.set === 'function') {
 
-                settings.set(
-                    'offers',
-                    offers
-                );
+                settings.set('offers', offers);
 
             } else {
 
@@ -346,7 +412,7 @@
         },
 
         /**
-         * Perform Icon List synchronisation.
+         * Perform synchronisation.
          */
         sync: function () {
 
@@ -363,10 +429,6 @@
                     'danger'
                 );
 
-                console.error(
-                    'OIS: No active widget model.'
-                );
-
                 return;
 
             }
@@ -376,11 +438,9 @@
                 const settings = model.get('settings');
 
                 if (!settings) {
-
                     throw new Error(
                         'Unable to read widget settings.'
                     );
-
                 }
 
                 const connectionId = String(
@@ -398,35 +458,34 @@
 
                 }
 
-                /*
-                 * Find the connected native Icon List.
-                 */
+                console.log(
+                    'OIS: Looking for Icon List:',
+                    connectionId
+                );
+
                 const list = this.findConnectedList(
                     connectionId
                 );
 
                 if (!list) {
 
-                    this.notify(
-                        'Icon List not found. Check Advanced → Attributes and make sure data-offer-stack|' +
-                        connectionId +
-                        ' matches the Connection ID.',
-                        'danger'
-                    );
+                    this.diagnoseLookup(connectionId);
 
-                    console.error(
-                        'OIS: Connected Icon List not found.',
-                        connectionId
+                    this.notify(
+                        'Icon List not found. Check the browser console (F12) for diagnostics.',
+                        'danger'
                     );
 
                     return;
 
                 }
 
-                /*
-                 * Read all Icon List labels.
-                 */
                 const labels = this.getLabels(list);
+
+                console.log(
+                    'OIS: Detected labels:',
+                    labels
+                );
 
                 if (!labels.length) {
 
@@ -441,24 +500,15 @@
 
                 this.syncing = true;
 
-                /*
-                 * Read existing images.
-                 */
                 const existingOffers = this.getExistingOffers(
                     model
                 );
 
-                /*
-                 * Match and preserve existing images.
-                 */
                 const syncedOffers = this.synchroniseOffers(
                     labels,
                     existingOffers
                 );
 
-                /*
-                 * Update the Elementor repeater.
-                 */
                 this.updateWidget(
                     model,
                     syncedOffers
@@ -479,7 +529,7 @@
                 this.notify(
                     'Successfully synced ' +
                     syncedOffers.length +
-                    ' images from your Icon List. Matching uploaded images have been preserved.',
+                    ' images. Matching uploaded images have been preserved.',
                     'success'
                 );
 
@@ -530,14 +580,8 @@
 
             }
 
-            /*
-             * Prevent duplicate event registrations.
-             */
             this.initialized = true;
 
-            /*
-             * Remember the active Image Stack widget.
-             */
             editor.hooks.addAction(
                 'panel/open_editor/widget/offer-image-stack',
                 function (panel, model) {
@@ -565,9 +609,6 @@
                 }
             );
 
-            /*
-             * Listen for the PHP Sync button event.
-             */
             editor.channels.editor.on(
                 'ois:sync-icon-list',
                 function () {
@@ -591,31 +632,19 @@
 
 
     /**
-     * Initialise when Elementor is ready.
-     *
-     * The event listener handles normal loading.
-     * The immediate call handles cases where Elementor
-     * has already initialised before this script loads.
+     * Initialise Elementor integration.
      */
-
     function initOIS() {
 
         OIS.init();
 
     }
 
-    /*
-     * Listen for Elementor initialisation.
-     */
     $(window).on(
         'elementor:init.ois elementor:loaded.ois',
         initOIS
     );
 
-    /*
-     * Also attempt immediate initialisation.
-     */
     initOIS();
-
 
 })(jQuery);
