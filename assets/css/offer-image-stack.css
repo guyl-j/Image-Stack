@@ -1,0 +1,135 @@
+/**
+ * Offer Image Stack
+ * Frontend Styles
+ * Version: 2.0.0
+ */
+
+.offer-image-stack {
+    --ois-card-width: 220px;
+    --ois-card-height: 280px;
+    --ois-speed: 450ms;
+    --ois-scale: 1.08;
+    --ois-lift: 20px;
+
+    position: relative;
+    width: 100%;
+    overflow: visible;
+}
+
+.offer-image-stack .ois-stage {
+    position: relative;
+    width: 100%;
+    min-height: calc(var(--ois-card-height) + 100px);
+
+    display: flex;
+    align-items: center;
+    justify-content: center;
+
+    isolation: isolate;
+    overflow: visible;
+}
+
+/* Individual image cards */
+
+.offer-image-stack .ois-card {
+    position: absolute;
+
+    width: var(--ois-card-width);
+    height: var(--ois-card-height);
+
+    left: 50%;
+    top: 50%;
+
+    display: block;
+
+    transform:
+        translate(-50%, -50%)
+        translate(
+            var(--ois-x, 0px),
+            var(--ois-y, 0px)
+        )
+        rotate(var(--ois-rotation, 0deg));
+
+    transform-origin: center center;
+
+    z-index: var(--ois-z, 1);
+
+    transition:
+        transform var(--ois-speed) cubic-bezier(.2,.8,.2,1),
+        opacity var(--ois-speed) ease;
+
+    will-change: transform;
+
+    pointer-events: none;
+}
+
+/* Images */
+
+.offer-image-stack .ois-card img {
+    display: block;
+
+    width: 100%;
+    height: 100%;
+
+    object-fit: cover;
+
+    border-radius: 8px;
+
+    box-shadow:
+        0 8px 25px rgba(0,0,0,.16),
+        0 2px 5px rgba(0,0,0,.08);
+
+    user-select: none;
+    -webkit-user-drag: none;
+}
+
+/* Active image */
+
+.offer-image-stack .ois-card.is-active {
+    transform:
+        translate(-50%, -50%)
+        translate(
+            0,
+            calc(var(--ois-lift) * -1)
+        )
+        rotate(0deg)
+        scale(var(--ois-scale));
+
+    z-index: 9999 !important;
+}
+
+/* Editor notice */
+
+.ois-editor-notice {
+    padding: 20px;
+    background: #f1f3f5;
+    border: 1px dashed #aab2bd;
+    border-radius: 6px;
+    color: #555;
+    text-align: center;
+}
+
+/* Smaller screens */
+
+@media (max-width: 767px) {
+
+    .offer-image-stack .ois-stage {
+        min-height: calc(var(--ois-card-height) + 70px);
+    }
+
+    .offer-image-stack .ois-card {
+        max-width: 85vw;
+    }
+
+}
+
+/* Reduced motion accessibility */
+
+@media (prefers-reduced-motion: reduce) {
+
+    .offer-image-stack .ois-card {
+        transition: none !important;
+        will-change: auto;
+    }
+
+}
