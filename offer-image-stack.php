@@ -2,7 +2,7 @@
 /**
  * Plugin Name: Offer Image Stack for Elementor
  * Description: Interactive overlapping offer image stack connected to Elementor's native Icon List.
- * Version: 2.1.0
+ * Version: 2.5.4
  * Author: Framework Web
  * Text Domain: offer-image-stack
  */
@@ -14,7 +14,7 @@ if ( ! defined( 'ABSPATH' ) ) {
 /**
  * Plugin constants.
  */
-define( 'OIS_VERSION', '2.1.0' );
+define( 'OIS_VERSION', '2.5.4' );
 define( 'OIS_PATH', plugin_dir_path( __FILE__ ) );
 define( 'OIS_URL', plugin_dir_url( __FILE__ ) );
 
