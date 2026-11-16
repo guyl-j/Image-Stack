@@ -43,7 +43,10 @@ class Offer_Image_Stack_Widget extends \Elementor\Widget_Base {
     }
 
     public function get_style_depends() {
-        return [ 'offer-image-stack' ];
+        return [
+        'offer-image-stack',
+        'offer-image-stack-responsive',
+        ];
     }
 
     public function get_script_depends() {
