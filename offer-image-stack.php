@@ -1,9 +1,8 @@
-
 <?php
 /**
  * Plugin Name: Offer Image Stack
- * Description: Integrated Elementor Image Stack and Icon List widget.
- * Version: 3.0.1
+ * Description: Interactive Elementor Image Stack and integrated Icon List widget.
+ * Version: 3.1.0
  * Author: Framework Web
  * Text Domain: offer-image-stack
  */
@@ -12,13 +11,10 @@ if ( ! defined( 'ABSPATH' ) ) {
     exit;
 }
 
-define( 'OIS_VERSION', '3.0.1' );
+define( 'OIS_VERSION', '3.1.0' );
 define( 'OIS_PATH', plugin_dir_path( __FILE__ ) );
 define( 'OIS_URL', plugin_dir_url( __FILE__ ) );
 
-/**
- * Register frontend assets.
- */
 function ois_register_assets() {
 
     wp_register_style(
@@ -38,21 +34,14 @@ function ois_register_assets() {
     wp_register_script(
         'offer-image-stack',
         OIS_URL . 'assets/js/offer-image-stack.js',
-        [ 'elementor-frontend' ],
+        [ 'jquery', 'elementor-frontend' ],
         OIS_VERSION,
         true
     );
 }
 add_action( 'wp_enqueue_scripts', 'ois_register_assets' );
 
-/**
- * Register the single integrated Elementor widget.
- */
 function ois_register_elementor_widget( $widgets_manager ) {
-
-    if ( ! class_exists( '\Elementor\Widget_Base' ) ) {
-        return;
-    }
 
     require_once OIS_PATH . 'includes/class-widget.php';
 
