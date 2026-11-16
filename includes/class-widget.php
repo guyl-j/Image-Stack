@@ -1,8 +1,8 @@
-
 <?php
 /**
- * Offer Image Stack - Integrated Icon List Widget
- * Version: 3.0.1
+ * Offer Image Stack
+ * Integrated Image Stack and Icon List Widget
+ * Version: 3.1.0
  */
 
 if ( ! defined( 'ABSPATH' ) ) {
@@ -39,15 +39,11 @@ class Offer_Image_Stack_Widget extends \Elementor\Widget_Base {
             'list',
             'hover',
             'gallery',
-            'offer',
         ];
     }
 
     public function get_style_depends() {
-        return [
-            'offer-image-stack',
-            'offer-image-stack-responsive',
-        ];
+        return [ 'offer-image-stack' ];
     }
 
     public function get_script_depends() {
@@ -56,7 +52,12 @@ class Offer_Image_Stack_Widget extends \Elementor\Widget_Base {
 
     protected function register_controls() {
 
+        /*
+         * INTEGRATED ICON LIST
+         */
+
         $this->register_icon_list_controls();
+
 
         /*
          * STACK POSITION
@@ -70,21 +71,22 @@ class Offer_Image_Stack_Widget extends \Elementor\Widget_Base {
             ]
         );
 
+        $position_options = [
+            'row'            => 'Left of List',
+            'row-reverse'    => 'Right of List',
+            'column'         => 'Above List',
+            'column-reverse' => 'Below List',
+        ];
+
         $this->add_responsive_control(
             'stack_position',
             [
-                'label' => 'Stack Position',
-                'type' => \Elementor\Controls_Manager::SELECT,
-                'default' => 'row',
-                'options' => [
-                    'row' => 'Left of List',
-                    'row-reverse' => 'Right of List',
-                    'column' => 'Above List',
-                    'column-reverse' => 'Below List',
-                ],
-                'description' =>
-                    'Choose independently for desktop, tablet and mobile.',
-                'selectors' => [
+                'label'       => 'Stack Position',
+                'type'        => \Elementor\Controls_Manager::SELECT,
+                'default'     => 'row',
+                'options'     => $position_options,
+                'description' => 'Choose independently for desktop, tablet and mobile.',
+                'selectors'   => [
                     '{{WRAPPER}} .ois-layout' =>
                         'flex-direction: {{VALUE}};',
                 ],
@@ -94,10 +96,10 @@ class Offer_Image_Stack_Widget extends \Elementor\Widget_Base {
         $this->add_responsive_control(
             'stack_list_gap',
             [
-                'label' => 'Stack / List Spacing',
-                'type' => \Elementor\Controls_Manager::SLIDER,
+                'label'      => 'Stack / List Spacing',
+                'type'       => \Elementor\Controls_Manager::SLIDER,
                 'size_units' => [ 'px', 'em', '%' ],
-                'range' => [
+                'range'      => [
                     'px' => [
                         'min' => 0,
                         'max' => 200,
@@ -117,23 +119,23 @@ class Offer_Image_Stack_Widget extends \Elementor\Widget_Base {
         $this->add_responsive_control(
             'stack_vertical_alignment',
             [
-                'label' => 'Vertical Alignment',
-                'type' => \Elementor\Controls_Manager::CHOOSE,
+                'label'   => 'Vertical Alignment',
+                'type'    => \Elementor\Controls_Manager::CHOOSE,
                 'options' => [
                     'flex-start' => [
                         'title' => 'Top',
-                        'icon' => 'eicon-v-align-top',
+                        'icon'  => 'eicon-v-align-top',
                     ],
                     'center' => [
                         'title' => 'Middle',
-                        'icon' => 'eicon-v-align-middle',
+                        'icon'  => 'eicon-v-align-middle',
                     ],
                     'flex-end' => [
                         'title' => 'Bottom',
-                        'icon' => 'eicon-v-align-bottom',
+                        'icon'  => 'eicon-v-align-bottom',
                     ],
                 ],
-                'default' => 'center',
+                'default'   => 'center',
                 'selectors' => [
                     '{{WRAPPER}} .ois-layout' =>
                         'align-items: {{VALUE}};',
@@ -144,10 +146,10 @@ class Offer_Image_Stack_Widget extends \Elementor\Widget_Base {
         $this->add_responsive_control(
             'list_width',
             [
-                'label' => 'List Width',
-                'type' => \Elementor\Controls_Manager::SLIDER,
+                'label'      => 'List Width',
+                'type'       => \Elementor\Controls_Manager::SLIDER,
                 'size_units' => [ 'px', '%' ],
-                'range' => [
+                'range'      => [
                     'px' => [
                         'min' => 100,
                         'max' => 800,
@@ -170,6 +172,7 @@ class Offer_Image_Stack_Widget extends \Elementor\Widget_Base {
 
         $this->end_controls_section();
 
+
         /*
          * IMAGE STACK
          */
@@ -178,17 +181,17 @@ class Offer_Image_Stack_Widget extends \Elementor\Widget_Base {
             'section_images',
             [
                 'label' => 'Image Stack',
-                'tab' => \Elementor\Controls_Manager::TAB_CONTENT,
+                'tab'   => \Elementor\Controls_Manager::TAB_CONTENT,
             ]
         );
 
         $this->add_responsive_control(
             'card_width',
             [
-                'label' => 'Image Width',
-                'type' => \Elementor\Controls_Manager::SLIDER,
+                'label'      => 'Image Width',
+                'type'       => \Elementor\Controls_Manager::SLIDER,
                 'size_units' => [ 'px', '%' ],
-                'range' => [
+                'range'      => [
                     'px' => [
                         'min' => 80,
                         'max' => 600,
@@ -205,10 +208,6 @@ class Offer_Image_Stack_Widget extends \Elementor\Widget_Base {
                 'selectors' => [
                     '{{WRAPPER}} .ois-card' =>
                         'width: {{SIZE}}{{UNIT}};',
-                    '{{WRAPPER}} .ois-image-area' =>
-                        'width: {{SIZE}}{{UNIT}};',
-                    '{{WRAPPER}} .ois-stage' =>
-                        'width: 100%;',
                 ],
             ]
         );
@@ -216,10 +215,10 @@ class Offer_Image_Stack_Widget extends \Elementor\Widget_Base {
         $this->add_responsive_control(
             'card_height',
             [
-                'label' => 'Image Height',
-                'type' => \Elementor\Controls_Manager::SLIDER,
+                'label'      => 'Image Height',
+                'type'       => \Elementor\Controls_Manager::SLIDER,
                 'size_units' => [ 'px' ],
-                'range' => [
+                'range'      => [
                     'px' => [
                         'min' => 100,
                         'max' => 700,
@@ -242,7 +241,7 @@ class Offer_Image_Stack_Widget extends \Elementor\Widget_Base {
             'rotation',
             [
                 'label' => 'Maximum Rotation',
-                'type' => \Elementor\Controls_Manager::SLIDER,
+                'type'  => \Elementor\Controls_Manager::SLIDER,
                 'range' => [
                     'px' => [
                         'min' => 0,
@@ -259,7 +258,7 @@ class Offer_Image_Stack_Widget extends \Elementor\Widget_Base {
             'offset',
             [
                 'label' => 'Image Overlap',
-                'type' => \Elementor\Controls_Manager::SLIDER,
+                'type'  => \Elementor\Controls_Manager::SLIDER,
                 'range' => [
                     'px' => [
                         'min' => 0,
@@ -275,18 +274,19 @@ class Offer_Image_Stack_Widget extends \Elementor\Widget_Base {
         $this->add_control(
             'pile_density',
             [
-                'label' => 'Pile Density',
-                'type' => \Elementor\Controls_Manager::SELECT,
+                'label'   => 'Pile Density',
+                'type'    => \Elementor\Controls_Manager::SELECT,
                 'default' => 'compact',
                 'options' => [
                     'compact' => 'Compact',
-                    'medium' => 'Medium',
-                    'loose' => 'Loose',
+                    'medium'  => 'Medium',
+                    'loose'   => 'Loose',
                 ],
             ]
         );
 
         $this->end_controls_section();
+
 
         /*
          * ANIMATION
@@ -296,7 +296,7 @@ class Offer_Image_Stack_Widget extends \Elementor\Widget_Base {
             'section_animation',
             [
                 'label' => 'Animation',
-                'tab' => \Elementor\Controls_Manager::TAB_CONTENT,
+                'tab'   => \Elementor\Controls_Manager::TAB_CONTENT,
             ]
         );
 
@@ -304,7 +304,7 @@ class Offer_Image_Stack_Widget extends \Elementor\Widget_Base {
             'hover_scale',
             [
                 'label' => 'Active Image Scale (%)',
-                'type' => \Elementor\Controls_Manager::SLIDER,
+                'type'  => \Elementor\Controls_Manager::SLIDER,
                 'range' => [
                     'px' => [
                         'min' => 100,
@@ -321,7 +321,7 @@ class Offer_Image_Stack_Widget extends \Elementor\Widget_Base {
             'hover_lift',
             [
                 'label' => 'Active Image Lift',
-                'type' => \Elementor\Controls_Manager::SLIDER,
+                'type'  => \Elementor\Controls_Manager::SLIDER,
                 'range' => [
                     'px' => [
                         'min' => 0,
@@ -338,7 +338,7 @@ class Offer_Image_Stack_Widget extends \Elementor\Widget_Base {
             'animation_speed',
             [
                 'label' => 'Animation Speed (ms)',
-                'type' => \Elementor\Controls_Manager::SLIDER,
+                'type'  => \Elementor\Controls_Manager::SLIDER,
                 'range' => [
                     'px' => [
                         'min' => 100,
@@ -353,15 +353,17 @@ class Offer_Image_Stack_Widget extends \Elementor\Widget_Base {
 
         $this->end_controls_section();
 
+
         /*
          * IMAGE STYLE
+         * Retained from existing widget.
          */
 
         $this->start_controls_section(
             'section_image_style',
             [
                 'label' => 'Image Styling',
-                'tab' => \Elementor\Controls_Manager::TAB_STYLE,
+                'tab'   => \Elementor\Controls_Manager::TAB_STYLE,
             ]
         );
 
@@ -369,7 +371,7 @@ class Offer_Image_Stack_Widget extends \Elementor\Widget_Base {
             'border_radius',
             [
                 'label' => 'Border Radius',
-                'type' => \Elementor\Controls_Manager::SLIDER,
+                'type'  => \Elementor\Controls_Manager::SLIDER,
                 'range' => [
                     'px' => [
                         'min' => 0,
@@ -389,7 +391,7 @@ class Offer_Image_Stack_Widget extends \Elementor\Widget_Base {
         $this->add_group_control(
             \Elementor\Group_Control_Box_Shadow::get_type(),
             [
-                'name' => 'card_shadow',
+                'name'     => 'card_shadow',
                 'selector' => '{{WRAPPER}} .ois-card img',
             ]
         );
@@ -397,17 +399,6 @@ class Offer_Image_Stack_Widget extends \Elementor\Widget_Base {
         $this->end_controls_section();
     }
 
-    /**
-     * Check Elementor editor mode.
-     */
-    private function is_ois_editor() {
-
-        return (
-            class_exists( '\Elementor\Plugin' ) &&
-            isset( \Elementor\Plugin::$instance->editor ) &&
-            \Elementor\Plugin::$instance->editor->is_edit_mode()
-        );
-    }
 
     /**
      * Render widget.
@@ -420,47 +411,17 @@ class Offer_Image_Stack_Widget extends \Elementor\Widget_Base {
 
         if ( empty( $items ) ) {
 
-            if ( $this->is_ois_editor() ) {
+            if (
+                \Elementor\Plugin::$instance->editor->is_edit_mode()
+            ) {
                 echo '<div class="ois-editor-notice">';
-                echo esc_html( 'Add a list entry, choose an icon and text, and select its associated image.' );
+                echo esc_html(
+                    'Add Icon List items and associated images to get started.'
+                );
                 echo '</div>';
             }
 
             return;
-        }
-
-        /*
-         * Every list item must have an image.
-         * Preserve original repeater indexes.
-         */
-
-        $images = [];
-
-        foreach ( $items as $index => $item ) {
-
-            $image_url = $item['item_image']['url'] ?? '';
-
-            if ( empty( $image_url ) ) {
-
-                if ( $this->is_ois_editor() ) {
-                    echo '<div class="ois-editor-notice">';
-                    echo esc_html(
-                        'Every Icon List entry needs an associated image. Please check your list items.'
-                    );
-                    echo '</div>';
-                }
-
-                return;
-            }
-
-            $images[] = [
-                'index' => $index,
-                'url'   => $image_url,
-                'alt'   => ! empty( $item['item_alt'] )
-                    ? $item['item_alt']
-                    : ( $item['item_image']['alt'] ?? '' ),
-                'title' => $item['item_text'] ?? '',
-            ];
         }
 
         $id = 'ois-' . $this->get_id();
@@ -495,8 +456,45 @@ class Offer_Image_Stack_Widget extends \Elementor\Widget_Base {
 
         $offset *= $density_multiplier[ $density ] ?? 0.55;
 
+        /*
+         * Collect associated images.
+         */
+
+        $images = [];
+
+        foreach ( $items as $index => $item ) {
+
+            if (
+                ! empty( $item['item_image']['url'] )
+            ) {
+                $images[] = [
+                    'index' => $index,
+                    'url'   => $item['item_image']['url'],
+                    'alt'   => ! empty( $item['item_alt'] )
+                        ? $item['item_alt']
+                        : ( $item['item_image']['alt'] ?? '' ),
+                    'title' => $item['item_text'] ?? '',
+                ];
+            }
+        }
+
+        if ( empty( $images ) ) {
+
+            if (
+                \Elementor\Plugin::$instance->editor->is_edit_mode()
+            ) {
+                echo '<div class="ois-editor-notice">';
+                echo esc_html(
+                    'Add at least one associated image to your Icon List.'
+                );
+                echo '</div>';
+            }
+
+            return;
+        }
+
         $icon_position = $settings['icon_position'] ?? 'start';
-        $list_layout = $settings['list_layout'] ?? 'vertical';
+        $list_layout   = $settings['list_layout'] ?? 'vertical';
 
         ?>
 
@@ -533,7 +531,6 @@ class Offer_Image_Stack_Widget extends \Elementor\Widget_Base {
                                     src="<?php echo esc_url( $image['url'] ); ?>"
                                     alt="<?php echo esc_attr( $image['alt'] ); ?>"
                                     loading="lazy"
-                                    draggable="false"
                                 />
 
                             </div>
