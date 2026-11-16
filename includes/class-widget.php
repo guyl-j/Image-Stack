@@ -2,7 +2,7 @@
 <?php
 /**
  * Offer Image Stack - Integrated Icon List Widget
- * Version: 3.0.0
+ * Version: 3.0.1
  */
 
 if ( ! defined( 'ABSPATH' ) ) {
@@ -39,13 +39,14 @@ class Offer_Image_Stack_Widget extends \Elementor\Widget_Base {
             'list',
             'hover',
             'gallery',
+            'offer',
         ];
     }
 
     public function get_style_depends() {
         return [
-        'offer-image-stack',
-        'offer-image-stack-responsive',
+            'offer-image-stack',
+            'offer-image-stack-responsive',
         ];
     }
 
@@ -55,7 +56,6 @@ class Offer_Image_Stack_Widget extends \Elementor\Widget_Base {
 
     protected function register_controls() {
 
-        // Integrated Icon List controls.
         $this->register_icon_list_controls();
 
         /*
@@ -70,22 +70,20 @@ class Offer_Image_Stack_Widget extends \Elementor\Widget_Base {
             ]
         );
 
-        $position_options = [
-            'row' => 'Left of List',
-            'row-reverse' => 'Right of List',
-            'column' => 'Above List',
-            'column-reverse' => 'Below List',
-        ];
-
         $this->add_responsive_control(
             'stack_position',
             [
                 'label' => 'Stack Position',
                 'type' => \Elementor\Controls_Manager::SELECT,
                 'default' => 'row',
-                'options' => $position_options,
+                'options' => [
+                    'row' => 'Left of List',
+                    'row-reverse' => 'Right of List',
+                    'column' => 'Above List',
+                    'column-reverse' => 'Below List',
+                ],
                 'description' =>
-                    'Choose independently for desktop, tablet and mobile. Left and right create an inline layout.',
+                    'Choose independently for desktop, tablet and mobile.',
                 'selectors' => [
                     '{{WRAPPER}} .ois-layout' =>
                         'flex-direction: {{VALUE}};',
@@ -207,6 +205,10 @@ class Offer_Image_Stack_Widget extends \Elementor\Widget_Base {
                 'selectors' => [
                     '{{WRAPPER}} .ois-card' =>
                         'width: {{SIZE}}{{UNIT}};',
+                    '{{WRAPPER}} .ois-image-area' =>
+                        'width: {{SIZE}}{{UNIT}};',
+                    '{{WRAPPER}} .ois-stage' =>
+                        'width: 100%;',
                 ],
             ]
         );
@@ -396,6 +398,18 @@ class Offer_Image_Stack_Widget extends \Elementor\Widget_Base {
     }
 
     /**
+     * Check Elementor editor mode.
+     */
+    private function is_ois_editor() {
+
+        return (
+            class_exists( '\Elementor\Plugin' ) &&
+            isset( \Elementor\Plugin::$instance->editor ) &&
+            \Elementor\Plugin::$instance->editor->is_edit_mode()
+        );
+    }
+
+    /**
      * Render widget.
      */
     protected function render() {
@@ -406,17 +420,47 @@ class Offer_Image_Stack_Widget extends \Elementor\Widget_Base {
 
         if ( empty( $items ) ) {
 
-            if (
-                \Elementor\Plugin::$instance->editor->is_edit_mode()
-            ) {
+            if ( $this->is_ois_editor() ) {
                 echo '<div class="ois-editor-notice">';
-                echo esc_html(
-                    'Add Icon List items and associated images to get started.'
-                );
+                echo esc_html( 'Add a list entry, choose an icon and text, and select its associated image.' );
                 echo '</div>';
             }
 
             return;
+        }
+
+        /*
+         * Every list item must have an image.
+         * Preserve original repeater indexes.
+         */
+
+        $images = [];
+
+        foreach ( $items as $index => $item ) {
+
+            $image_url = $item['item_image']['url'] ?? '';
+
+            if ( empty( $image_url ) ) {
+
+                if ( $this->is_ois_editor() ) {
+                    echo '<div class="ois-editor-notice">';
+                    echo esc_html(
+                        'Every Icon List entry needs an associated image. Please check your list items.'
+                    );
+                    echo '</div>';
+                }
+
+                return;
+            }
+
+            $images[] = [
+                'index' => $index,
+                'url'   => $image_url,
+                'alt'   => ! empty( $item['item_alt'] )
+                    ? $item['item_alt']
+                    : ( $item['item_image']['alt'] ?? '' ),
+                'title' => $item['item_text'] ?? '',
+            ];
         }
 
         $id = 'ois-' . $this->get_id();
@@ -445,44 +489,11 @@ class Offer_Image_Stack_Widget extends \Elementor\Widget_Base {
 
         $density_multiplier = [
             'compact' => 0.55,
-            'medium' => 0.8,
-            'loose' => 1,
+            'medium'  => 0.8,
+            'loose'   => 1,
         ];
 
         $offset *= $density_multiplier[ $density ] ?? 0.55;
-
-        $images = [];
-
-        foreach ( $items as $index => $item ) {
-
-            if (
-                ! empty( $item['item_image']['url'] )
-            ) {
-                $images[] = [
-                    'index' => $index,
-                    'url' => $item['item_image']['url'],
-                    'alt' => ! empty( $item['item_alt'] )
-                        ? $item['item_alt']
-                        : ( $item['item_image']['alt'] ?? '' ),
-                    'title' => $item['item_text'] ?? '',
-                ];
-            }
-        }
-
-        if ( empty( $images ) ) {
-
-            if (
-                \Elementor\Plugin::$instance->editor->is_edit_mode()
-            ) {
-                echo '<div class="ois-editor-notice">';
-                echo esc_html(
-                    'Add at least one associated image to your Icon List.'
-                );
-                echo '</div>';
-            }
-
-            return;
-        }
 
         $icon_position = $settings['icon_position'] ?? 'start';
         $list_layout = $settings['list_layout'] ?? 'vertical';
@@ -522,6 +533,7 @@ class Offer_Image_Stack_Widget extends \Elementor\Widget_Base {
                                     src="<?php echo esc_url( $image['url'] ); ?>"
                                     alt="<?php echo esc_attr( $image['alt'] ); ?>"
                                     loading="lazy"
+                                    draggable="false"
                                 />
 
                             </div>
