@@ -1,21 +1,26 @@
+
 <?php
 /**
- * Offer Image Stack - Elementor Widget
- * Version: 2.5.4
+ * Offer Image Stack - Integrated Icon List Widget
+ * Version: 3.0.0
  */
 
 if ( ! defined( 'ABSPATH' ) ) {
     exit;
 }
 
+require_once __DIR__ . '/class-icon-list.php';
+
 class Offer_Image_Stack_Widget extends \Elementor\Widget_Base {
+
+    use OIS_Icon_List_Controls;
 
     public function get_name() {
         return 'offer-image-stack';
     }
 
     public function get_title() {
-        return 'Offer Image Stack';
+        return 'Image Stack List';
     }
 
     public function get_icon() {
@@ -28,12 +33,12 @@ class Offer_Image_Stack_Widget extends \Elementor\Widget_Base {
 
     public function get_keywords() {
         return [
-            'offer',
             'image',
             'stack',
-            'overlap',
+            'icon',
+            'list',
+            'hover',
             'gallery',
-            'icon list',
         ];
     }
 
@@ -47,158 +52,131 @@ class Offer_Image_Stack_Widget extends \Elementor\Widget_Base {
 
     protected function register_controls() {
 
+        // Integrated Icon List controls.
+        $this->register_icon_list_controls();
+
         /*
-         * CONNECTION
+         * STACK POSITION
          */
 
         $this->start_controls_section(
-            'section_connection',
+            'section_stack_position',
             [
-                'label' => 'Icon List Connection',
-                'tab' => \Elementor\Controls_Manager::TAB_CONTENT,
+                'label' => 'Stack Position',
+                'tab'   => \Elementor\Controls_Manager::TAB_CONTENT,
             ]
         );
 
-        $this->add_control(
-            'connection_id',
+        $position_options = [
+            'row' => 'Left of List',
+            'row-reverse' => 'Right of List',
+            'column' => 'Above List',
+            'column-reverse' => 'Below List',
+        ];
+
+        $this->add_responsive_control(
+            'stack_position',
             [
-                'label' => 'Connection ID',
-                'type' => \Elementor\Controls_Manager::TEXT,
-                'default' => 'offers-01',
-                'placeholder' => 'offers-01',
-                'description' => 'Must match the data-offer-stack attribute on your native Elementor Icon List.',
+                'label' => 'Stack Position',
+                'type' => \Elementor\Controls_Manager::SELECT,
+                'default' => 'row',
+                'options' => $position_options,
+                'description' =>
+                    'Choose independently for desktop, tablet and mobile. Left and right create an inline layout.',
+                'selectors' => [
+                    '{{WRAPPER}} .ois-layout' =>
+                        'flex-direction: {{VALUE}};',
+                ],
             ]
         );
 
-        $this->add_control(
-            'connection_help',
+        $this->add_responsive_control(
+            'stack_list_gap',
             [
-                'type' => \Elementor\Controls_Manager::RAW_HTML,
-                'raw' => '
-                    <strong>How to connect:</strong><br>
-                    Select your native Elementor Icon List.<br>
-                    Go to Advanced → Attributes.<br>
-                    Add:<br>
-                    <code>data-offer-stack|offers-01</code>
-                    <br><br>
-                    Make sure the Connection ID above matches.
-                ',
-                'content_classes' => 'elementor-panel-alert elementor-panel-alert-info',
+                'label' => 'Stack / List Spacing',
+                'type' => \Elementor\Controls_Manager::SLIDER,
+                'size_units' => [ 'px', 'em', '%' ],
+                'range' => [
+                    'px' => [
+                        'min' => 0,
+                        'max' => 200,
+                    ],
+                ],
+                'default' => [
+                    'unit' => 'px',
+                    'size' => 40,
+                ],
+                'selectors' => [
+                    '{{WRAPPER}} .ois-layout' =>
+                        'gap: {{SIZE}}{{UNIT}};',
+                ],
+            ]
+        );
+
+        $this->add_responsive_control(
+            'stack_vertical_alignment',
+            [
+                'label' => 'Vertical Alignment',
+                'type' => \Elementor\Controls_Manager::CHOOSE,
+                'options' => [
+                    'flex-start' => [
+                        'title' => 'Top',
+                        'icon' => 'eicon-v-align-top',
+                    ],
+                    'center' => [
+                        'title' => 'Middle',
+                        'icon' => 'eicon-v-align-middle',
+                    ],
+                    'flex-end' => [
+                        'title' => 'Bottom',
+                        'icon' => 'eicon-v-align-bottom',
+                    ],
+                ],
+                'default' => 'center',
+                'selectors' => [
+                    '{{WRAPPER}} .ois-layout' =>
+                        'align-items: {{VALUE}};',
+                ],
+            ]
+        );
+
+        $this->add_responsive_control(
+            'list_width',
+            [
+                'label' => 'List Width',
+                'type' => \Elementor\Controls_Manager::SLIDER,
+                'size_units' => [ 'px', '%' ],
+                'range' => [
+                    'px' => [
+                        'min' => 100,
+                        'max' => 800,
+                    ],
+                    '%' => [
+                        'min' => 10,
+                        'max' => 100,
+                    ],
+                ],
+                'default' => [
+                    'unit' => '%',
+                    'size' => 50,
+                ],
+                'selectors' => [
+                    '{{WRAPPER}} .ois-list-area' =>
+                        'width: {{SIZE}}{{UNIT}};',
+                ],
             ]
         );
 
         $this->end_controls_section();
 
-
         /*
-         * OFFER IMAGES
+         * IMAGE STACK
          */
 
         $this->start_controls_section(
             'section_images',
             [
-                'label' => 'Offer Images',
-                'tab' => \Elementor\Controls_Manager::TAB_CONTENT,
-            ]
-        );
-
-        /*
-         * Sync button.
-         */
-
-        $this->add_control(
-            'sync_icon_list',
-            [
-                'label' => 'Sync Images',
-                'type' => \Elementor\Controls_Manager::BUTTON,
-                'text' => 'Sync with Icon List',
-                'event' => 'ois:sync-icon-list',
-                'button_type' => 'default',
-                'separator' => 'before',
-            ]
-        );
-
-        $this->add_control(
-            'sync_help',
-            [
-                'type' => \Elementor\Controls_Manager::RAW_HTML,
-                'raw' => '
-                    <div style="padding:10px;background:#f1f5f9;border-radius:5px;">
-                        Click Sync with Icon List to create one image
-                        entry for every Icon List item.
-
-                        Existing images are preserved when their
-                        matching text remains unchanged.
-                    </div>
-                ',
-            ]
-        );
-
-        /*
-         * Repeater fields.
-         */
-
-        $repeater = new \Elementor\Repeater();
-
-        $repeater->add_control(
-            'offer_name',
-            [
-                'label' => 'Offer Name',
-                'type' => \Elementor\Controls_Manager::TEXT,
-                'default' => '',
-                'label_block' => true,
-            ]
-        );
-
-        $repeater->add_control(
-            'offer_image',
-            [
-                'label' => 'Offer Image',
-                'type' => \Elementor\Controls_Manager::MEDIA,
-                'default' => [],
-            ]
-        );
-
-        $repeater->add_control(
-            'image_alt',
-            [
-                'label' => 'Image Alt Text',
-                'type' => \Elementor\Controls_Manager::TEXT,
-                'default' => '',
-                'label_block' => true,
-            ]
-        );
-
-        $repeater->add_control(
-            'label_key',
-            [
-                'type' => \Elementor\Controls_Manager::HIDDEN,
-                'default' => '',
-            ]
-        );
-
-        $this->add_control(
-            'offers',
-            [
-                'label' => 'Images',
-                'type' => \Elementor\Controls_Manager::REPEATER,
-                'fields' => $repeater->get_controls(),
-                'title_field' => '{{{ offer_name }}}',
-                'default' => [],
-            ]
-        );
-
-        $this->end_controls_section();
-
-
-        /*
-         * STACK LAYOUT
-         */
-
-        $this->start_controls_section(
-            'section_layout',
-            [
-                'label' => 'Stack Layout',
+                'label' => 'Image Stack',
                 'tab' => \Elementor\Controls_Manager::TAB_CONTENT,
             ]
         );
@@ -206,13 +184,13 @@ class Offer_Image_Stack_Widget extends \Elementor\Widget_Base {
         $this->add_responsive_control(
             'card_width',
             [
-                'label' => 'Card Width',
+                'label' => 'Image Width',
                 'type' => \Elementor\Controls_Manager::SLIDER,
                 'size_units' => [ 'px', '%' ],
                 'range' => [
                     'px' => [
                         'min' => 80,
-                        'max' => 500,
+                        'max' => 600,
                     ],
                     '%' => [
                         'min' => 10,
@@ -233,13 +211,13 @@ class Offer_Image_Stack_Widget extends \Elementor\Widget_Base {
         $this->add_responsive_control(
             'card_height',
             [
-                'label' => 'Card Height',
+                'label' => 'Image Height',
                 'type' => \Elementor\Controls_Manager::SLIDER,
                 'size_units' => [ 'px' ],
                 'range' => [
                     'px' => [
                         'min' => 100,
-                        'max' => 600,
+                        'max' => 700,
                     ],
                 ],
                 'default' => [
@@ -249,6 +227,8 @@ class Offer_Image_Stack_Widget extends \Elementor\Widget_Base {
                 'selectors' => [
                     '{{WRAPPER}} .ois-card' =>
                         'height: {{SIZE}}{{UNIT}};',
+                    '{{WRAPPER}} .ois-stage' =>
+                        '--ois-card-height: {{SIZE}}{{UNIT}};',
                 ],
             ]
         );
@@ -273,9 +253,8 @@ class Offer_Image_Stack_Widget extends \Elementor\Widget_Base {
         $this->add_control(
             'offset',
             [
-                'label' => 'Maximum Position Offset',
+                'label' => 'Image Overlap',
                 'type' => \Elementor\Controls_Manager::SLIDER,
-                'description' => 'Controls how tightly the images overlap.',
                 'range' => [
                     'px' => [
                         'min' => 0,
@@ -303,7 +282,6 @@ class Offer_Image_Stack_Widget extends \Elementor\Widget_Base {
         );
 
         $this->end_controls_section();
-
 
         /*
          * ANIMATION
@@ -370,15 +348,14 @@ class Offer_Image_Stack_Widget extends \Elementor\Widget_Base {
 
         $this->end_controls_section();
 
-
         /*
-         * STYLE
+         * IMAGE STYLE
          */
 
         $this->start_controls_section(
-            'section_style',
+            'section_image_style',
             [
-                'label' => 'Card Styling',
+                'label' => 'Image Styling',
                 'tab' => \Elementor\Controls_Manager::TAB_STYLE,
             ]
         );
@@ -391,7 +368,7 @@ class Offer_Image_Stack_Widget extends \Elementor\Widget_Base {
                 'range' => [
                     'px' => [
                         'min' => 0,
-                        'max' => 50,
+                        'max' => 100,
                     ],
                 ],
                 'default' => [
@@ -415,48 +392,31 @@ class Offer_Image_Stack_Widget extends \Elementor\Widget_Base {
         $this->end_controls_section();
     }
 
-
     /**
      * Render widget.
      */
-
     protected function render() {
 
         $settings = $this->get_settings_for_display();
 
-        $offers = $settings['offers'] ?? [];
+        $items = $settings['list_items'] ?? [];
 
-        $offers = array_values(
-            array_filter(
-                $offers,
-                function ( $offer ) {
-                    return ! empty( $offer['offer_image']['url'] );
-                }
-            )
-        );
-
-        if ( empty( $offers ) ) {
+        if ( empty( $items ) ) {
 
             if (
                 \Elementor\Plugin::$instance->editor->is_edit_mode()
             ) {
-
                 echo '<div class="ois-editor-notice">';
                 echo esc_html(
-                    'Sync your Icon List and add offer images to display your image stack.'
+                    'Add Icon List items and associated images to get started.'
                 );
                 echo '</div>';
-
             }
 
             return;
         }
 
         $id = 'ois-' . $this->get_id();
-
-        $connection_id = Offer_Image_Stack_Connector::sanitize_connection_id(
-            $settings['connection_id'] ?? ''
-        );
 
         $rotation = absint(
             $settings['rotation']['size'] ?? 15
@@ -486,16 +446,49 @@ class Offer_Image_Stack_Widget extends \Elementor\Widget_Base {
             'loose' => 1,
         ];
 
-        $offset = $offset * (
-            $density_multiplier[ $density ] ?? 0.55
-        );
+        $offset *= $density_multiplier[ $density ] ?? 0.55;
+
+        $images = [];
+
+        foreach ( $items as $index => $item ) {
+
+            if (
+                ! empty( $item['item_image']['url'] )
+            ) {
+                $images[] = [
+                    'index' => $index,
+                    'url' => $item['item_image']['url'],
+                    'alt' => ! empty( $item['item_alt'] )
+                        ? $item['item_alt']
+                        : ( $item['item_image']['alt'] ?? '' ),
+                    'title' => $item['item_text'] ?? '',
+                ];
+            }
+        }
+
+        if ( empty( $images ) ) {
+
+            if (
+                \Elementor\Plugin::$instance->editor->is_edit_mode()
+            ) {
+                echo '<div class="ois-editor-notice">';
+                echo esc_html(
+                    'Add at least one associated image to your Icon List.'
+                );
+                echo '</div>';
+            }
+
+            return;
+        }
+
+        $icon_position = $settings['icon_position'] ?? 'start';
+        $list_layout = $settings['list_layout'] ?? 'vertical';
 
         ?>
 
         <div
             id="<?php echo esc_attr( $id ); ?>"
-            class="offer-image-stack"
-            data-connection="<?php echo esc_attr( $connection_id ); ?>"
+            class="offer-image-stack ois-integrated"
             data-rotation="<?php echo esc_attr( $rotation ); ?>"
             data-offset="<?php echo esc_attr( $offset ); ?>"
             data-scale="<?php echo esc_attr( $scale / 100 ); ?>"
@@ -508,36 +501,45 @@ class Offer_Image_Stack_Widget extends \Elementor\Widget_Base {
             "
         >
 
-            <div class="ois-stage">
+            <div class="ois-layout">
 
-                <?php foreach ( $offers as $index => $offer ) :
+                <div class="ois-image-area">
 
-                    $image = $offer['offer_image'];
+                    <div class="ois-stage">
 
-                    $image_url = $image['url'];
+                        <?php foreach ( $images as $image ) : ?>
 
-                    $alt = ! empty( $offer['image_alt'] )
-                        ? $offer['image_alt']
-                        : ( $image['alt'] ?? 'Offer image' );
+                            <div
+                                class="ois-card"
+                                data-offer-index="<?php echo esc_attr( $image['index'] ); ?>"
+                                aria-hidden="true"
+                            >
 
-                    ?>
+                                <img
+                                    src="<?php echo esc_url( $image['url'] ); ?>"
+                                    alt="<?php echo esc_attr( $image['alt'] ); ?>"
+                                    loading="lazy"
+                                />
 
-                    <div
-                        class="ois-card"
-                        data-offer-index="<?php echo esc_attr( $index ); ?>"
-                        data-offer-name="<?php echo esc_attr( $offer['offer_name'] ?? '' ); ?>"
-                        aria-hidden="true"
-                    >
+                            </div>
 
-                        <img
-                            src="<?php echo esc_url( $image_url ); ?>"
-                            alt="<?php echo esc_attr( $alt ); ?>"
-                            loading="lazy"
-                        />
+                        <?php endforeach; ?>
 
                     </div>
 
-                <?php endforeach; ?>
+                </div>
+
+                <div class="ois-list-area">
+
+                    <?php
+                    $this->render_icon_list(
+                        $items,
+                        $icon_position,
+                        $list_layout
+                    );
+                    ?>
+
+                </div>
 
             </div>
 
