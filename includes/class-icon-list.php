@@ -1,7 +1,7 @@
 <?php
 /**
  * Integrated Icon List controls for Offer Image Stack.
- * Version: 3.0.1
+ * Version: 3.1.0
  */
 
 if ( ! defined( 'ABSPATH' ) ) {
@@ -11,6 +11,10 @@ if ( ! defined( 'ABSPATH' ) ) {
 trait OIS_Icon_List_Controls {
 
     protected function register_icon_list_controls() {
+
+        /*
+         * CONTENT: ICON LIST
+         */
 
         $this->start_controls_section(
             'section_icon_list',
@@ -29,7 +33,6 @@ trait OIS_Icon_List_Controls {
                 'type'        => \Elementor\Controls_Manager::TEXT,
                 'default'     => 'List Item',
                 'label_block' => true,
-                'required'    => true,
                 'dynamic'     => [ 'active' => true ],
             ]
         );
@@ -67,8 +70,7 @@ trait OIS_Icon_List_Controls {
                 'label'       => 'Associated Image',
                 'type'        => \Elementor\Controls_Manager::MEDIA,
                 'default'     => [],
-                'required'    => true,
-                'description' => 'Choose the image that corresponds to this list entry.',
+                'description' => 'Choose the image associated with this list entry.',
             ]
         );
 
@@ -85,12 +87,12 @@ trait OIS_Icon_List_Controls {
         $this->add_control(
             'list_items',
             [
-                'label'          => 'List Items',
-                'type'           => \Elementor\Controls_Manager::REPEATER,
-                'fields'         => $repeater->get_controls(),
-                'title_field'    => '{{{ item_text }}}',
-                'default'        => [],
-                'prevent_empty'  => false,
+                'label'         => 'List Items',
+                'type'          => \Elementor\Controls_Manager::REPEATER,
+                'fields'        => $repeater->get_controls(),
+                'title_field'   => '{{{ item_text }}}',
+                'default'       => [],
+                'prevent_empty' => false,
             ]
         );
 
@@ -116,6 +118,43 @@ trait OIS_Icon_List_Controls {
                 'options' => [
                     'vertical'   => 'Vertical',
                     'horizontal' => 'Horizontal',
+                ],
+            ]
+        );
+
+        $this->end_controls_section();
+
+        /*
+         * STYLE: LIST
+         */
+
+        $this->start_controls_section(
+            'section_list_style',
+            [
+                'label' => 'List',
+                'tab'   => \Elementor\Controls_Manager::TAB_STYLE,
+            ]
+        );
+
+        $this->add_responsive_control(
+            'list_space_between',
+            [
+                'label'      => 'Space Between',
+                'type'       => \Elementor\Controls_Manager::SLIDER,
+                'size_units' => [ 'px', 'em' ],
+                'range'      => [
+                    'px' => [
+                        'min' => 0,
+                        'max' => 100,
+                    ],
+                ],
+                'default' => [
+                    'unit' => 'px',
+                    'size' => 15,
+                ],
+                'selectors' => [
+                    '{{WRAPPER}} .ois-list' =>
+                        'gap: {{SIZE}}{{UNIT}};',
                 ],
             ]
         );
@@ -149,48 +188,165 @@ trait OIS_Icon_List_Controls {
 
         $this->end_controls_section();
 
-        /*
-         * LIST STYLE
+            /*
+         * STYLE: DIVIDER
          */
 
         $this->start_controls_section(
-            'section_list_style',
+            'section_divider_style',
             [
-                'label' => 'Icon List Styling',
+                'label' => 'Divider',
                 'tab'   => \Elementor\Controls_Manager::TAB_STYLE,
             ]
         );
 
         $this->add_control(
-            'list_text_color',
+            'list_divider',
             [
-                'label'     => 'Text Colour',
-                'type'      => \Elementor\Controls_Manager::COLOR,
-                'selectors' => [
-                    '{{WRAPPER}} .ois-list-text' =>
-                        'color: {{VALUE}};',
+                'label'        => 'Divider',
+                'type'         => \Elementor\Controls_Manager::SWITCHER,
+                'label_on'     => 'Yes',
+                'label_off'    => 'No',
+                'return_value' => 'yes',
+                'default'      => '',
+            ]
+        );
+
+        $this->add_control(
+            'list_divider_style',
+            [
+                'label'     => 'Style',
+                'type'      => \Elementor\Controls_Manager::SELECT,
+                'default'   => 'solid',
+                'options'   => [
+                    'solid'  => 'Solid',
+                    'double' => 'Double',
+                    'dotted' => 'Dotted',
+                    'dashed' => 'Dashed',
                 ],
+                'condition' => [
+                    'list_divider' => 'yes',
+                ],
+            ]
+        );
+
+        $this->add_responsive_control(
+            'list_divider_weight',
+            [
+                'label'      => 'Weight',
+                'type'       => \Elementor\Controls_Manager::SLIDER,
+                'size_units' => [ 'px' ],
+                'range'      => [
+                    'px' => [
+                        'min' => 1,
+                        'max' => 10,
+                    ],
+                ],
+                'default' => [
+                    'unit' => 'px',
+                    'size' => 1,
+                ],
+                'condition' => [
+                    'list_divider' => 'yes',
+                ],
+            ]
+        );
+
+        $this->add_responsive_control(
+            'list_divider_width',
+            [
+                'label'      => 'Width',
+                'type'       => \Elementor\Controls_Manager::SLIDER,
+                'size_units' => [ '%', 'px' ],
+                'range'      => [
+                    '%' => [
+                        'min' => 10,
+                        'max' => 100,
+                    ],
+                    'px' => [
+                        'min' => 10,
+                        'max' => 1000,
+                    ],
+                ],
+                'default' => [
+                    'unit' => '%',
+                    'size' => 100,
+                ],
+                'condition' => [
+                    'list_divider' => 'yes',
+                ],
+            ]
+        );
+
+        $this->add_control(
+            'list_divider_color',
+            [
+                'label'     => 'Colour',
+                'type'      => \Elementor\Controls_Manager::COLOR,
+                'default'   => '#dddddd',
+                'condition' => [
+                    'list_divider' => 'yes',
+                ],
+            ]
+        );
+
+        $this->end_controls_section();
+
+
+        /*
+         * STYLE: ICON
+         */
+
+        $this->start_controls_section(
+            'section_icon_style',
+            [
+                'label' => 'Icon',
+                'tab'   => \Elementor\Controls_Manager::TAB_STYLE,
+            ]
+        );
+
+        $this->start_controls_tabs( 'icon_style_tabs' );
+
+        $this->start_controls_tab(
+            'icon_normal',
+            [
+                'label' => 'Normal',
             ]
         );
 
         $this->add_control(
             'list_icon_color',
             [
-                'label'     => 'Icon Colour',
+                'label'     => 'Colour',
                 'type'      => \Elementor\Controls_Manager::COLOR,
-                'selectors' => [
-                    '{{WRAPPER}} .ois-list-icon' =>
-                        'color: {{VALUE}}; fill: {{VALUE}};',
-                    '{{WRAPPER}} .ois-list-icon svg' =>
-                        'fill: {{VALUE}};',
-                ],
             ]
         );
+
+        $this->end_controls_tab();
+
+        $this->start_controls_tab(
+            'icon_hover',
+            [
+                'label' => 'Hover',
+            ]
+        );
+
+        $this->add_control(
+            'list_icon_hover_color',
+            [
+                'label'     => 'Colour',
+                'type'      => \Elementor\Controls_Manager::COLOR,
+            ]
+        );
+
+        $this->end_controls_tab();
+
+        $this->end_controls_tabs();
 
         $this->add_responsive_control(
             'list_icon_size',
             [
-                'label'      => 'Icon Size',
+                'label'      => 'Size',
                 'type'       => \Elementor\Controls_Manager::SLIDER,
                 'size_units' => [ 'px', 'em' ],
                 'range'      => [
@@ -213,32 +369,9 @@ trait OIS_Icon_List_Controls {
         );
 
         $this->add_responsive_control(
-            'list_item_spacing',
-            [
-                'label'      => 'Item Spacing',
-                'type'       => \Elementor\Controls_Manager::SLIDER,
-                'size_units' => [ 'px', 'em' ],
-                'range'      => [
-                    'px' => [
-                        'min' => 0,
-                        'max' => 100,
-                    ],
-                ],
-                'default' => [
-                    'unit' => 'px',
-                    'size' => 15,
-                ],
-                'selectors' => [
-                    '{{WRAPPER}} .ois-list' =>
-                        'gap: {{SIZE}}{{UNIT}};',
-                ],
-            ]
-        );
-
-        $this->add_responsive_control(
             'list_icon_spacing',
             [
-                'label'      => 'Icon / Text Spacing',
+                'label'      => 'Gap',
                 'type'       => \Elementor\Controls_Manager::SLIDER,
                 'size_units' => [ 'px', 'em' ],
                 'range'      => [
@@ -258,6 +391,95 @@ trait OIS_Icon_List_Controls {
             ]
         );
 
+        $this->add_responsive_control(
+            'icon_horizontal_alignment',
+            [
+                'label'   => 'Horizontal Alignment',
+                'type'    => \Elementor\Controls_Manager::CHOOSE,
+                'options' => [
+                    'flex-start' => [
+                        'title' => 'Left',
+                        'icon'  => 'eicon-h-align-left',
+                    ],
+                    'center' => [
+                        'title' => 'Center',
+                        'icon'  => 'eicon-h-align-center',
+                    ],
+                    'flex-end' => [
+                        'title' => 'Right',
+                        'icon'  => 'eicon-h-align-right',
+                    ],
+                ],
+                'default' => 'center',
+                'selectors' => [
+                    '{{WRAPPER}} .ois-list-icon' =>
+                        'justify-content: {{VALUE}};',
+                ],
+            ]
+        );
+
+        $this->add_responsive_control(
+            'icon_vertical_alignment',
+            [
+                'label'   => 'Vertical Alignment',
+                'type'    => \Elementor\Controls_Manager::CHOOSE,
+                'options' => [
+                    'flex-start' => [
+                        'title' => 'Top',
+                        'icon'  => 'eicon-v-align-top',
+                    ],
+                    'center' => [
+                        'title' => 'Middle',
+                        'icon'  => 'eicon-v-align-middle',
+                    ],
+                    'flex-end' => [
+                        'title' => 'Bottom',
+                        'icon'  => 'eicon-v-align-bottom',
+                    ],
+                ],
+                'default' => 'center',
+                'selectors' => [
+                    '{{WRAPPER}} .ois-list-item' =>
+                        'align-items: {{VALUE}};',
+                ],
+            ]
+        );
+
+        $this->add_responsive_control(
+            'icon_vertical_position',
+            [
+                'label' => 'Adjust Vertical Position',
+                'type'  => \Elementor\Controls_Manager::SLIDER,
+                'range' => [
+                    'px' => [
+                        'min' => -30,
+                        'max' => 30,
+                    ],
+                ],
+                'default' => [
+                    'size' => 0,
+                ],
+                'selectors' => [
+                    '{{WRAPPER}} .ois-list-icon' =>
+                        'transform: translateY({{SIZE}}px);',
+                ],
+            ]
+        );
+
+        $this->end_controls_section();
+
+            /*
+         * STYLE: TEXT
+         */
+
+        $this->start_controls_section(
+            'section_text_style',
+            [
+                'label' => 'Text',
+                'tab'   => \Elementor\Controls_Manager::TAB_STYLE,
+            ]
+        );
+
         $this->add_group_control(
             \Elementor\Group_Control_Typography::get_type(),
             [
@@ -266,10 +488,48 @@ trait OIS_Icon_List_Controls {
             ]
         );
 
+        $this->add_group_control(
+            \Elementor\Group_Control_Text_Shadow::get_type(),
+            [
+                'name'     => 'list_text_shadow',
+                'selector' => '{{WRAPPER}} .ois-list-text',
+            ]
+        );
+
+        $this->start_controls_tabs( 'text_style_tabs' );
+
+        $this->start_controls_tab(
+            'text_normal',
+            [
+                'label' => 'Normal',
+            ]
+        );
+
+        $this->add_control(
+            'list_text_color',
+            [
+                'label'     => 'Colour',
+                'type'      => \Elementor\Controls_Manager::COLOR,
+                'selectors' => [
+                    '{{WRAPPER}} .ois-list-text' =>
+                        'color: {{VALUE}};',
+                ],
+            ]
+        );
+
+        $this->end_controls_tab();
+
+        $this->start_controls_tab(
+            'text_hover',
+            [
+                'label' => 'Hover',
+            ]
+        );
+
         $this->add_control(
             'list_hover_color',
             [
-                'label'     => 'Hover Text Colour',
+                'label'     => 'Colour',
                 'type'      => \Elementor\Controls_Manager::COLOR,
                 'selectors' => [
                     '{{WRAPPER}} .ois-list-item:hover .ois-list-text' =>
@@ -280,8 +540,13 @@ trait OIS_Icon_List_Controls {
             ]
         );
 
+        $this->end_controls_tab();
+
+        $this->end_controls_tabs();
+
         $this->end_controls_section();
     }
+
 
     /**
      * Render integrated list.
@@ -296,12 +561,28 @@ trait OIS_Icon_List_Controls {
             return;
         }
 
+        $settings = $this->get_settings_for_display();
+
+        $show_divider = (
+            isset( $settings['list_divider'] ) &&
+            'yes' === $settings['list_divider']
+        );
+
+        $divider_style = $settings['list_divider_style'] ?? 'solid';
+        $divider_weight = $settings['list_divider_weight']['size'] ?? 1;
+        $divider_width = $settings['list_divider_width']['size'] ?? 100;
+        $divider_width_unit = $settings['list_divider_width']['unit'] ?? '%';
+        $divider_color = $settings['list_divider_color'] ?? '#dddddd';
+
         $classes = [
             'ois-list',
             'ois-list-' . sanitize_html_class( $layout ),
         ];
 
-        echo '<ul class="' . esc_attr( implode( ' ', $classes ) ) . '">';
+        echo '<ul class="' . esc_attr( implode( ' ', $classes ) ) . '" role="list">';
+
+        $total_items = count( $items );
+        $current_item = 0;
 
         foreach ( $items as $index => $item ) {
 
@@ -363,10 +644,38 @@ trait OIS_Icon_List_Controls {
             echo $url ? '</a>' : '</span>';
 
             echo '</li>';
+
+            $current_item++;
+
+            /*
+             * Divider between items only.
+             */
+
+            if (
+                $show_divider &&
+                $current_item < $total_items
+            ) {
+
+                $divider_css = sprintf(
+                    'border-style:%1$s;border-width:%2$s;border-color:%3$s;width:%4$s;',
+                    esc_attr( $divider_style ),
+                    esc_attr( $divider_weight ) . 'px',
+                    esc_attr( $divider_color ),
+                    esc_attr( $divider_width ) . esc_attr( $divider_width_unit )
+                );
+
+                if ( 'horizontal' === $layout ) {
+                    $divider_css .= 'width:0;height:100%;';
+                    $divider_css .= 'border-width:0 0 0 ' . esc_attr( $divider_weight ) . 'px;';
+                }
+
+                echo '<li class="ois-list-divider" aria-hidden="true" style="' . esc_attr( $divider_css ) . '"></li>';
+            }
         }
 
         echo '</ul>';
     }
+
 
     /**
      * Render individual Elementor icon.
@@ -386,4 +695,5 @@ trait OIS_Icon_List_Controls {
 
         echo '</span>';
     }
+
 }
