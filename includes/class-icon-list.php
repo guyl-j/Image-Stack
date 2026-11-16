@@ -1,8 +1,7 @@
-
 <?php
 /**
  * Integrated Icon List controls for Offer Image Stack.
- * Each list item owns its icon, text, link and image.
+ * Version: 3.0.1
  */
 
 if ( ! defined( 'ABSPATH' ) ) {
@@ -30,6 +29,7 @@ trait OIS_Icon_List_Controls {
                 'type'        => \Elementor\Controls_Manager::TEXT,
                 'default'     => 'List Item',
                 'label_block' => true,
+                'required'    => true,
                 'dynamic'     => [ 'active' => true ],
             ]
         );
@@ -49,11 +49,11 @@ trait OIS_Icon_List_Controls {
         $repeater->add_control(
             'item_link',
             [
-                'label'         => 'Link',
-                'type'          => \Elementor\Controls_Manager::URL,
-                'placeholder'   => 'https://your-link.com',
-                'options'       => [ 'url', 'is_external', 'nofollow' ],
-                'default'       => [
+                'label'       => 'Link',
+                'type'        => \Elementor\Controls_Manager::URL,
+                'placeholder' => 'https://your-link.com',
+                'options'     => [ 'url', 'is_external', 'nofollow' ],
+                'default'     => [
                     'url'         => '',
                     'is_external' => false,
                     'nofollow'    => false,
@@ -64,9 +64,11 @@ trait OIS_Icon_List_Controls {
         $repeater->add_control(
             'item_image',
             [
-                'label'   => 'Associated Image',
-                'type'    => \Elementor\Controls_Manager::MEDIA,
-                'default' => [],
+                'label'       => 'Associated Image',
+                'type'        => \Elementor\Controls_Manager::MEDIA,
+                'default'     => [],
+                'required'    => true,
+                'description' => 'Choose the image that corresponds to this list entry.',
             ]
         );
 
@@ -83,12 +85,12 @@ trait OIS_Icon_List_Controls {
         $this->add_control(
             'list_items',
             [
-                'label'       => 'List Items',
-                'type'        => \Elementor\Controls_Manager::REPEATER,
-                'fields'      => $repeater->get_controls(),
-                'title_field' => '{{{ item_text }}}',
-                'default'     => [],
-                'prevent_empty' => false,
+                'label'          => 'List Items',
+                'type'           => \Elementor\Controls_Manager::REPEATER,
+                'fields'         => $repeater->get_controls(),
+                'title_field'    => '{{{ item_text }}}',
+                'default'        => [],
+                'prevent_empty'  => false,
             ]
         );
 
@@ -282,9 +284,13 @@ trait OIS_Icon_List_Controls {
     }
 
     /**
-     * Render the integrated list.
+     * Render integrated list.
      */
-    protected function render_icon_list( $items, $position = 'start', $layout = 'vertical' ) {
+    protected function render_icon_list(
+        $items,
+        $position = 'start',
+        $layout = 'vertical'
+    ) {
 
         if ( empty( $items ) ) {
             return;
@@ -295,7 +301,7 @@ trait OIS_Icon_List_Controls {
             'ois-list-' . sanitize_html_class( $layout ),
         ];
 
-        echo '<ul class="' . esc_attr( implode( ' ', $classes ) ) . '" role="list">';
+        echo '<ul class="' . esc_attr( implode( ' ', $classes ) ) . '">';
 
         foreach ( $items as $index => $item ) {
 
@@ -303,29 +309,44 @@ trait OIS_Icon_List_Controls {
             $icon = $item['item_icon'] ?? [];
             $link = $item['item_link'] ?? [];
 
+            $url = ! empty( $link['url'] )
+                ? $link['url']
+                : '';
+
             echo '<li class="ois-list-entry">';
 
-            $tag = ! empty( $link['url'] ) ? 'a' : 'button';
+            if ( $url ) {
 
-            $attributes = '';
+                $attributes = ' href="' . esc_url( $url ) . '"';
 
-            if ( 'a' === $tag ) {
-                $attributes .= ' href="' . esc_url( $link['url'] ) . '"';
+                $rel = [];
 
                 if ( ! empty( $link['is_external'] ) ) {
                     $attributes .= ' target="_blank"';
-                    $attributes .= ' rel="noopener noreferrer"';
-                } elseif ( ! empty( $link['nofollow'] ) ) {
-                    $attributes .= ' rel="nofollow"';
+                    $rel[] = 'noopener';
+                    $rel[] = 'noreferrer';
                 }
+
+                if ( ! empty( $link['nofollow'] ) ) {
+                    $rel[] = 'nofollow';
+                }
+
+                if ( ! empty( $rel ) ) {
+                    $attributes .= ' rel="' . esc_attr(
+                        implode( ' ', array_unique( $rel ) )
+                    ) . '"';
+                }
+
+                echo '<a class="ois-list-item"';
+                echo $attributes;
+
             } else {
-                $attributes .= ' type="button"';
+
+                echo '<span class="ois-list-item"';
+
             }
 
-            echo '<' . $tag . ' class="ois-list-item"';
-            echo $attributes;
-            echo ' data-oi-index="' . esc_attr( $index ) . '"';
-            echo '>';
+            echo ' data-oi-index="' . esc_attr( $index ) . '">';
 
             if ( 'start' === $position ) {
                 $this->render_list_icon( $icon );
@@ -339,7 +360,7 @@ trait OIS_Icon_List_Controls {
                 $this->render_list_icon( $icon );
             }
 
-            echo '</' . $tag . '>';
+            echo $url ? '</a>' : '</span>';
 
             echo '</li>';
         }
@@ -348,7 +369,7 @@ trait OIS_Icon_List_Controls {
     }
 
     /**
-     * Render an individual Elementor icon.
+     * Render individual Elementor icon.
      */
     protected function render_list_icon( $icon ) {
 
@@ -366,4 +387,3 @@ trait OIS_Icon_List_Controls {
         echo '</span>';
     }
 }
-
