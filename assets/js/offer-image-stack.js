@@ -1,89 +1,18 @@
+
 /**
  * Offer Image Stack
- * Frontend Interaction
- * Version: 2.5.4
+ * Integrated Frontend Interaction
+ * Version: 3.0.1
  */
 
 (function () {
 
     'use strict';
 
-    const initialized = new WeakMap();
+    const initializedRoots = new WeakSet();
 
-    /**
-     * Find connected native Elementor Icon List.
-     */
-    function findIconList(connectionId) {
-
-        if (!connectionId) {
-            return null;
-        }
-
-        const widgets = document.querySelectorAll(
-            '[data-offer-stack]'
-        );
-
-        for (const widget of widgets) {
-
-            if (
-                widget.getAttribute('data-offer-stack') !==
-                connectionId
-            ) {
-                continue;
-            }
-
-            const list = widget.querySelector(
-                '.elementor-icon-list-items'
-            );
-
-            if (list) {
-                return list;
-            }
-
-        }
-
-        return null;
-    }
-
-
-    /**
-     * Get Icon List items.
-     */
-    function getListItems(list) {
-
-        if (!list) {
-            return [];
-        }
-
-        return Array.from(
-            list.querySelectorAll(
-                ':scope > .elementor-icon-list-item'
-            )
-        );
-
-    }
-
-
-    /**
-     * Extract Icon List text.
-     */
-    function getItemText(item) {
-
-        const textElement = item.querySelector(
-            '.elementor-icon-list-text'
-        );
-
-        return textElement
-            ? textElement.textContent
-                .replace(/\s+/g, ' ')
-                .trim()
-            : '';
-
-    }
-
-
-    /**
-     * Repeatable random generator.
+    /*
+     * Reproducible random generator.
      */
     function createRandomGenerator(seed) {
 
@@ -96,74 +25,51 @@
             return (value - 1) / 2147483646;
 
         };
-
     }
 
-
-    /**
+    /*
      * Arrange overlapping images.
      */
     function arrangeImages(root, cards) {
 
-        const random = createRandomGenerator(
-            Array.from(root.id).reduce(
-                function (total, char) {
+        if (!cards.length) {
+            return;
+        }
 
-                    return total + char.charCodeAt(0);
-
-                },
-                92821
-            )
+        const seed = Array.from(root.id || 'ois').reduce(
+            function (total, char) {
+                return total + char.charCodeAt(0);
+            },
+            92821
         );
 
-        const rotation = Number(
-            root.dataset.rotation
-        ) || 15;
+        const random = createRandomGenerator(seed);
 
-        const offset = Number(
-            root.dataset.offset
-        ) || 25;
+        const rotation = Number(root.dataset.rotation) || 15;
+        const offset = Number(root.dataset.offset) || 25;
 
         const order = cards.map(function (_, index) {
-
             return index;
-
         });
 
         /*
          * Shuffle stacking order.
          */
+        for (let i = order.length - 1; i > 0; i--) {
 
-        for (
-            let i = order.length - 1;
-            i > 0;
-            i--
-        ) {
-
-            const j = Math.floor(
-                random() * (i + 1)
-            );
+            const j = Math.floor(random() * (i + 1));
 
             [order[i], order[j]] = [
                 order[j],
                 order[i]
             ];
-
         }
 
         cards.forEach(function (card, index) {
 
-            const x = (
-                random() * 2 - 1
-            ) * offset;
-
-            const y = (
-                random() * 2 - 1
-            ) * offset;
-
-            const angle = (
-                random() * 2 - 1
-            ) * rotation;
+            const x = (random() * 2 - 1) * offset;
+            const y = (random() * 2 - 1) * offset;
+            const angle = (random() * 2 - 1) * rotation;
 
             card.style.setProperty(
                 '--ois-x',
@@ -186,23 +92,60 @@
             );
 
         });
-
     }
 
+    /*
+     * Get all integrated list items.
+     */
+    function getListItems(root) {
 
-    /**
+        const list = root.querySelector('.ois-list');
+
+        if (!list) {
+            return [];
+        }
+
+        return Array.from(
+            list.querySelectorAll(
+                '.ois-list-entry > .ois-list-item'
+            )
+        );
+    }
+
+    /*
+     * Find an image using its original repeater index.
+     */
+    function getCard(root, index) {
+
+        const cards = root.querySelectorAll(
+            '.ois-card[data-offer-index]'
+        );
+
+        return Array.from(cards).find(function (card) {
+
+            return String(card.dataset.offerIndex) === String(index);
+
+        }) || null;
+    }
+
+    /*
      * Activate an image.
      */
-    function activateImage(cards, index) {
+    function activateImage(root, index) {
 
-        cards.forEach(function (card, cardIndex) {
+        const cards = root.querySelectorAll('.ois-card');
 
-            const active = cardIndex === index;
+        const activeCard = getCard(root, index);
 
-            card.classList.toggle(
-                'is-active',
-                active
-            );
+        if (!activeCard) {
+            return;
+        }
+
+        cards.forEach(function (card) {
+
+            const active = card === activeCard;
+
+            card.classList.toggle('is-active', active);
 
             card.setAttribute(
                 'aria-hidden',
@@ -211,257 +154,196 @@
 
         });
 
-    }
+        /*
+         * Update active list entry.
+         */
+        getListItems(root).forEach(function (item) {
 
+            const active =
+                String(item.dataset.oiIndex) === String(index);
 
-    /**
-     * Connect list items to images.
-     */
-    function connectInteractions(items, cards) {
-
-        items.forEach(function (item, index) {
-
-            if (index >= cards.length) {
-                return;
-            }
-
-            const card = cards[index];
-
-            const label = getItemText(item);
-
-            if (!label) {
-                return;
-            }
-
-            /*
-             * Store offer name.
-             */
-
-            card.dataset.offerLabel = label;
-
-            card.dataset.offerIndex = index;
-
-            card.setAttribute(
-                'title',
-                label
-            );
-
-            /*
-             * Desktop hover.
-             */
-
-            item.addEventListener(
-                'mouseenter',
-                function () {
-
-                    if (
-                        window.matchMedia(
-                            '(hover: hover)'
-                        ).matches
-                    ) {
-
-                        activateImage(
-                            cards,
-                            index
-                        );
-
-                    }
-
-                }
-            );
-
-            /*
-             * Keyboard accessibility.
-             */
-
-            item.addEventListener(
-                'focusin',
-                function () {
-
-                    activateImage(
-                        cards,
-                        index
-                    );
-
-                }
-            );
-
-            /*
-             * Mobile interaction.
-             */
-
-            item.addEventListener(
-                'click',
-                function () {
-
-                    if (
-                        window.matchMedia(
-                            '(hover: none)'
-                        ).matches
-                    ) {
-
-                        activateImage(
-                            cards,
-                            index
-                        );
-
-                    }
-
-                }
-            );
+            item.classList.toggle('is-active', active);
 
         });
 
     }
 
+    /*
+     * Connect integrated list entries to their images.
+     */
+    function connectInteractions(root) {
 
-    /**
-     * Initialise one image stack.
+        /*
+         * Desktop pointer interaction.
+         */
+        root.addEventListener('pointerover', function (event) {
+
+            if (
+                !window.matchMedia ||
+                !window.matchMedia('(hover: hover)').matches
+            ) {
+                return;
+            }
+
+            const item = event.target.closest('.ois-list-item');
+
+            if (!item || !root.contains(item)) {
+                return;
+            }
+
+            /*
+             * Ignore movement between child elements
+             * inside the same list item.
+             */
+            if (
+                event.relatedTarget &&
+                item.contains(event.relatedTarget)
+            ) {
+                return;
+            }
+
+            activateImage(root, item.dataset.oiIndex);
+
+        });
+
+        /*
+         * Keyboard interaction.
+         */
+        root.addEventListener('focusin', function (event) {
+
+            const item = event.target.closest('.ois-list-item');
+
+            if (!item || !root.contains(item)) {
+                return;
+            }
+
+            activateImage(root, item.dataset.oiIndex);
+
+        });
+
+        /*
+         * Touch interaction.
+         *
+         * Normal link navigation is preserved.
+         */
+        root.addEventListener('click', function (event) {
+
+            const item = event.target.closest('.ois-list-item');
+
+            if (!item || !root.contains(item)) {
+                return;
+            }
+
+            const isTouch = window.matchMedia &&
+                window.matchMedia('(hover: none)').matches;
+
+            if (isTouch) {
+                activateImage(root, item.dataset.oiIndex);
+            }
+
+        });
+
+    }
+
+    /*
+     * Initialise one widget.
      */
     function initialiseStack(root) {
 
-        if (initialized.has(root)) {
+        if (!root) {
             return;
         }
 
-        const connectionId = root.dataset.connection;
+        const stage = root.querySelector('.ois-stage');
+        const list = root.querySelector('.ois-list');
 
-        if (!connectionId) {
-
-            root.classList.add(
-                'ois-no-connection'
-            );
-
-            return;
-
-        }
-
-        const stage = root.querySelector(
-            '.ois-stage'
-        );
-
-        if (!stage) {
+        if (!stage || !list) {
             return;
         }
-
-        /*
-         * Find connected Icon List.
-         */
-
-        const list = findIconList(
-            connectionId
-        );
-
-        if (!list) {
-
-            root.classList.add(
-                'ois-no-connection'
-            );
-
-            return;
-
-        }
-
-        /*
-         * Get images and labels.
-         */
 
         const cards = Array.from(
             stage.querySelectorAll('.ois-card')
         );
 
-        const items = getListItems(list);
+        const items = getListItems(root);
 
         if (!cards.length || !items.length) {
             return;
         }
 
         /*
-         * Match available cards to list items.
+         * Build a map of available image indexes.
          */
-
-        const visibleCount = Math.min(
-            cards.length,
-            items.length
+        const availableIndexes = new Set(
+            cards.map(function (card) {
+                return String(card.dataset.offerIndex);
+            })
         );
 
         /*
-         * Hide cards without matching list items.
+         * Arrange the images.
          */
+        arrangeImages(root, cards);
 
-        cards.forEach(function (card, index) {
+        /*
+         * Ensure every list entry points to an existing image.
+         */
+        items.forEach(function (item) {
 
-            if (index < visibleCount) {
+            const index = String(item.dataset.oiIndex);
 
-                card.style.display = '';
+            const hasImage = availableIndexes.has(index);
 
-            } else {
-
-                card.style.display = 'none';
-
-            }
+            item.classList.toggle(
+                'ois-no-image',
+                !hasImage
+            );
 
         });
-
-        const visibleCards = cards.slice(
-            0,
-            visibleCount
-        );
-
-        /*
-         * Arrange images.
-         */
-
-        arrangeImages(
-            root,
-            visibleCards
-        );
 
         /*
          * Set initial active image.
          */
+        const firstItem = items.find(function (item) {
 
-        activateImage(
-            visibleCards,
-            0
-        );
+            return availableIndexes.has(
+                String(item.dataset.oiIndex)
+            );
+
+        });
+
+        if (firstItem) {
+
+            activateImage(
+                root,
+                firstItem.dataset.oiIndex
+            );
+
+        }
 
         /*
-         * Connect Icon List interactions.
+         * Only attach delegated listeners once.
          */
+        if (!initializedRoots.has(root)) {
 
-        connectInteractions(
-            items,
-            visibleCards
-        );
+            connectInteractions(root);
 
-        /*
-         * Record connection information.
-         */
+            initializedRoots.add(root);
 
-        root.dataset.connectedItems = visibleCount;
+        }
 
         root.dataset.connectionStatus = 'connected';
-
-        root.classList.remove(
-            'ois-no-connection'
-        );
-
-        initialized.set(
-            root,
-            list
-        );
+        root.dataset.connectedItems = items.length;
 
     }
 
-
-    /**
-     * Initialise all image stacks.
+    /*
+     * Initialise all widgets.
      */
     function initialiseAll() {
 
         document.querySelectorAll(
-            '.offer-image-stack'
+            '.offer-image-stack.ois-integrated'
         ).forEach(function (root) {
 
             initialiseStack(root);
@@ -470,9 +352,8 @@
 
     }
 
-
-    /**
-     * Watch for Elementor dynamically rendered widgets.
+    /*
+     * Observe dynamically rendered Elementor widgets.
      */
     function observeChanges() {
 
@@ -480,33 +361,48 @@
             return;
         }
 
-        const observer = new MutationObserver(
-            function (mutations) {
+        const observer = new MutationObserver(function (mutations) {
 
-                let shouldRefresh = false;
+            let shouldRefresh = false;
 
-                mutations.forEach(function (mutation) {
+            mutations.forEach(function (mutation) {
+
+                if (
+                    mutation.type !== 'childList' ||
+                    !mutation.addedNodes.length
+                ) {
+                    return;
+                }
+
+                mutation.addedNodes.forEach(function (node) {
+
+                    if (node.nodeType !== 1) {
+                        return;
+                    }
 
                     if (
-                        mutation.type === 'childList' &&
-                        (
-                            mutation.addedNodes.length ||
-                            mutation.removedNodes.length
-                        )
+                        node.matches &&
+                        node.matches('.offer-image-stack.ois-integrated')
                     ) {
-
                         shouldRefresh = true;
+                    }
 
+                    if (
+                        node.querySelector &&
+                        node.querySelector('.offer-image-stack.ois-integrated')
+                    ) {
+                        shouldRefresh = true;
                     }
 
                 });
 
-                if (shouldRefresh) {
-                    initialiseAll();
-                }
+            });
 
+            if (shouldRefresh) {
+                initialiseAll();
             }
-        );
+
+        });
 
         observer.observe(
             document.body,
@@ -518,8 +414,7 @@
 
     }
 
-
-    /**
+    /*
      * Start frontend functionality.
      */
     function start() {
@@ -531,7 +426,6 @@
         /*
          * Elementor frontend integration.
          */
-
         if (
             window.elementorFrontend &&
             window.elementorFrontend.hooks
@@ -550,13 +444,10 @@
 
     }
 
-
-    /**
+    /*
      * Document ready.
      */
-    if (
-        document.readyState === 'loading'
-    ) {
+    if (document.readyState === 'loading') {
 
         document.addEventListener(
             'DOMContentLoaded',
