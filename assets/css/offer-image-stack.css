@@ -1,7 +1,8 @@
+
 /**
  * Offer Image Stack
  * Frontend Styles
- * Version: 2.5.4
+ * Version: 3.0.1
  */
 
 .offer-image-stack {
@@ -14,7 +15,33 @@
     position: relative;
     width: 100%;
     overflow: visible;
+    box-sizing: border-box;
 }
+
+.offer-image-stack *,
+.offer-image-stack *::before,
+.offer-image-stack *::after {
+    box-sizing: border-box;
+}
+
+/* Main layout */
+
+.offer-image-stack .ois-layout {
+    display: flex;
+    align-items: center;
+    width: 100%;
+    min-width: 0;
+}
+
+/* Image area */
+
+.offer-image-stack .ois-image-area {
+    position: relative;
+    flex: 0 1 auto;
+    min-width: 0;
+}
+
+/* Image stage */
 
 .offer-image-stack .ois-stage {
     position: relative;
@@ -59,7 +86,6 @@
         opacity var(--ois-speed) ease;
 
     will-change: transform;
-
     pointer-events: none;
 }
 
@@ -98,32 +124,120 @@
     z-index: 9999 !important;
 }
 
+/* List area */
+
+.offer-image-stack .ois-list-area {
+    position: relative;
+    flex: 0 1 auto;
+    min-width: 0;
+}
+
+/* Icon List */
+
+.offer-image-stack .ois-list {
+    display: flex;
+    flex-direction: column;
+    flex-wrap: nowrap;
+
+    width: 100%;
+
+    margin: 0;
+    padding: 0;
+
+    list-style: none;
+}
+
+/* Horizontal list */
+
+.offer-image-stack .ois-list.ois-list-horizontal {
+    flex-direction: row;
+    flex-wrap: wrap;
+    align-items: center;
+}
+
+/* List entries */
+
+.offer-image-stack .ois-list-entry {
+    display: flex;
+    min-width: 0;
+    margin: 0;
+    padding: 0;
+}
+
+/* Individual list item */
+
+.offer-image-stack .ois-list-item {
+    display: inline-flex;
+    align-items: center;
+
+    min-width: 0;
+
+    padding: 0;
+    margin: 0;
+
+    gap: 10px;
+
+    border: 0;
+    background: transparent;
+
+    color: inherit;
+    font: inherit;
+    text-align: inherit;
+    text-decoration: none;
+}
+
+/* Linked items */
+
+.offer-image-stack a.ois-list-item {
+    cursor: pointer;
+}
+
+/* Keyboard focus */
+
+.offer-image-stack a.ois-list-item:focus-visible {
+    outline: 2px solid currentColor;
+    outline-offset: 4px;
+}
+
+/* Icons */
+
+.offer-image-stack .ois-list-icon {
+    display: inline-flex;
+    flex-shrink: 0;
+
+    align-items: center;
+    justify-content: center;
+
+    line-height: 1;
+}
+
+.offer-image-stack .ois-list-icon svg {
+    display: block;
+    width: 1em;
+    height: 1em;
+}
+
+/* Text */
+
+.offer-image-stack .ois-list-text {
+    display: inline-block;
+    min-width: 0;
+}
+
 /* Editor notice */
 
 .ois-editor-notice {
     padding: 20px;
+
     background: #f1f3f5;
     border: 1px dashed #aab2bd;
     border-radius: 6px;
+
     color: #555;
     text-align: center;
 }
 
-/* Smaller screens */
-
-@media (max-width: 767px) {
-
-    .offer-image-stack .ois-stage {
-        min-height: calc(var(--ois-card-height) + 70px);
-    }
-
-    .offer-image-stack .ois-card {
-        max-width: 85vw;
-    }
-
-}
-
-/* Reduced motion accessibility */
+/* Reduced motion */
 
 @media (prefers-reduced-motion: reduce) {
 
