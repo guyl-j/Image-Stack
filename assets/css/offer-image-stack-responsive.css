@@ -1,1 +1,191 @@
 
+/**
+ * Offer Image Stack
+ * Responsive stylesheet
+ * Version: 3.0.0
+ */
+
+/* =========================================
+   BASE RESPONSIVE LAYOUT
+========================================= */
+
+.offer-image-stack,
+.offer-image-stack * {
+    box-sizing: border-box;
+}
+
+.offer-image-stack .ois-layout {
+    display: flex;
+    width: 100%;
+    gap: 40px;
+}
+
+/* Image area */
+
+.offer-image-stack .ois-image-area {
+    flex: 0 1 auto;
+    min-width: 0;
+}
+
+.offer-image-stack .ois-stage {
+    position: relative;
+    height: var(--ois-card-height, 280px);
+}
+
+/* List area */
+
+.offer-image-stack .ois-list-area {
+    flex: 0 1 auto;
+    min-width: 0;
+}
+
+/* =========================================
+   IMAGE STACK
+========================================= */
+
+.offer-image-stack .ois-card {
+    position: absolute;
+    top: 0;
+    left: 0;
+    overflow: hidden;
+    max-width: 100%;
+}
+
+.offer-image-stack .ois-card img {
+    display: block;
+    width: 100%;
+    height: 100%;
+    object-fit: cover;
+}
+
+/* =========================================
+   ICON LIST
+========================================= */
+
+.offer-image-stack .ois-list {
+    display: flex;
+    flex-direction: column;
+    gap: 15px;
+    width: 100%;
+    margin: 0;
+    padding: 0;
+    list-style: none;
+}
+
+.offer-image-stack .ois-list-horizontal {
+    flex-direction: row;
+    flex-wrap: wrap;
+    align-items: center;
+}
+
+.offer-image-stack .ois-list-entry {
+    display: flex;
+    margin: 0;
+    padding: 0;
+}
+
+.offer-image-stack .ois-list-item {
+    display: inline-flex;
+    align-items: center;
+    gap: 10px;
+    padding: 0;
+    margin: 0;
+    border: 0;
+    background: transparent;
+    color: inherit;
+    font: inherit;
+    text-align: inherit;
+    text-decoration: none;
+    cursor: pointer;
+}
+
+.offer-image-stack .ois-list-item:focus-visible {
+    outline: 2px solid currentColor;
+    outline-offset: 4px;
+}
+
+.offer-image-stack .ois-list-icon {
+    display: inline-flex;
+    flex-shrink: 0;
+    align-items: center;
+    justify-content: center;
+    line-height: 1;
+}
+
+.offer-image-stack .ois-list-icon svg {
+    display: block;
+    width: 1em;
+    height: 1em;
+}
+
+.offer-image-stack .ois-list-text {
+    display: inline-block;
+}
+
+/* =========================================
+   TABLET
+========================================= */
+
+@media (max-width: 1024px) {
+
+    .offer-image-stack .ois-layout {
+        gap: 30px;
+    }
+
+}
+
+/* =========================================
+   MOBILE
+========================================= */
+
+@media (max-width: 767px) {
+
+    .offer-image-stack .ois-layout {
+        gap: 20px;
+        width: 100%;
+    }
+
+    .offer-image-stack .ois-image-area,
+    .offer-image-stack .ois-list-area {
+        min-width: 0;
+    }
+
+    .offer-image-stack .ois-stage {
+        max-width: 100%;
+    }
+
+    .offer-image-stack .ois-card {
+        max-width: 100%;
+    }
+
+    .offer-image-stack .ois-list {
+        width: 100%;
+    }
+
+    .offer-image-stack .ois-list-horizontal {
+        flex-direction: row;
+        flex-wrap: wrap;
+    }
+
+    .offer-image-stack .ois-list-item {
+        max-width: 100%;
+    }
+
+    .offer-image-stack .ois-list-text {
+        overflow-wrap: anywhere;
+    }
+
+}
+
+/* =========================================
+   SMALL MOBILE
+========================================= */
+
+@media (max-width: 480px) {
+
+    .offer-image-stack .ois-layout {
+        gap: 12px;
+    }
+
+}
+
