@@ -47,7 +47,7 @@ class Offer_Image_Stack_Widget extends \Elementor\Widget_Base {
     }
 
     public function get_script_depends() {
-        return [ 'offer-image-stack' ];
+        return [ 'offer-image-stack', 'offer-image-stack-responsive' ];
     }
 
     protected function register_controls() {
@@ -165,7 +165,7 @@ class Offer_Image_Stack_Widget extends \Elementor\Widget_Base {
                 ],
                 'selectors' => [
                     '{{WRAPPER}} .ois-list-area' =>
-                        'width: {{SIZE}}{{UNIT}};',
+                        'width: {{SIZE}}{{UNIT}}; flex-basis: {{SIZE}}{{UNIT}};',
                 ],
             ]
         );
@@ -206,8 +206,8 @@ class Offer_Image_Stack_Widget extends \Elementor\Widget_Base {
                     'size' => 220,
                 ],
                 'selectors' => [
-                    '{{WRAPPER}} .ois-card' =>
-                        'width: {{SIZE}}{{UNIT}};',
+                    '{{WRAPPER}} .offer-image-stack' =>
+                        '--ois-card-width: {{SIZE}}{{UNIT}};',
                 ],
             ]
         );
@@ -229,9 +229,7 @@ class Offer_Image_Stack_Widget extends \Elementor\Widget_Base {
                     'size' => 280,
                 ],
                 'selectors' => [
-                    '{{WRAPPER}} .ois-card' =>
-                        'height: {{SIZE}}{{UNIT}};',
-                    '{{WRAPPER}} .ois-stage' =>
+                    '{{WRAPPER}} .offer-image-stack' =>
                         '--ois-card-height: {{SIZE}}{{UNIT}};',
                 ],
             ]
