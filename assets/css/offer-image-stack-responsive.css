@@ -20,11 +20,13 @@
 }
 
 .offer-image-stack .ois-image-area {
-    flex: 0 1 auto;
+    flex: 1 1 0;
+    width: 0;
 }
 
 .offer-image-stack .ois-list-area {
-    flex: 0 1 auto;
+    flex: 0 1 50%;
+    width: 50%;
 }
 
 .offer-image-stack .ois-stage {
@@ -109,7 +111,7 @@
     }
 
     .offer-image-stack .ois-card {
-        max-width: 85vw;
+        max-width: 100%;
     }
 
     .offer-image-stack .ois-list {
