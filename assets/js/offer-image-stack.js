@@ -1,4 +1,3 @@
-
 /**
  * Offer Image Stack
  * Integrated Frontend Interaction
@@ -67,8 +66,9 @@
 
         cards.forEach(function (card, index) {
 
-            const x = (random() * 2 - 1) * offset;
-            const y = (random() * 2 - 1) * offset;
+            const ratio = Number(root.style.getPropertyValue('--ois-fit-ratio')) || 1;
+            const x = (random() * 2 - 1) * offset * ratio;
+            const y = (random() * 2 - 1) * offset * ratio;
             const angle = (random() * 2 - 1) * rotation;
 
             card.style.setProperty(
@@ -92,6 +92,62 @@
             );
 
         });
+    }
+
+
+    /*
+     * CSS transforms on absolutely positioned cards do not affect flex sizing.
+     * Measure the rendered column and fit the entire rotated / active pile in it.
+     */
+    function fitStack(root) {
+        const stage = root.querySelector('.ois-stage');
+        const area = root.querySelector('.ois-image-area');
+        if (!stage || !area) {
+            return;
+        }
+
+        const cards = stage.querySelectorAll('.ois-card');
+        if (!cards.length) {
+            return;
+        }
+
+        const styles = window.getComputedStyle(root);
+        const rawWidth = styles.getPropertyValue('--ois-card-width').trim();
+        const rawHeight = styles.getPropertyValue('--ois-card-height').trim();
+        const reference = document.createElement('div');
+        reference.style.cssText = 'position:absolute;visibility:hidden;pointer-events:none;width:' +
+            (rawWidth || '220px') + ';height:' + (rawHeight || '280px') + ';';
+        stage.appendChild(reference);
+        const desiredWidth = reference.getBoundingClientRect().width || 220;
+        const desiredHeight = reference.getBoundingClientRect().height || 280;
+        reference.remove();
+
+        const rotation = Math.abs(Number(root.dataset.rotation) || 0) * Math.PI / 180;
+        const offset = Math.abs(Number(root.dataset.offset) || 0);
+        const scale = Math.max(1, Number(root.dataset.scale) || 1);
+        const lift = Math.abs(Number(root.dataset.lift) || 0);
+        const available = Math.max(0, area.clientWidth - 8);
+
+        const rotatedWidth = Math.abs(desiredWidth * Math.cos(rotation)) +
+            Math.abs(desiredHeight * Math.sin(rotation)) + 2 * offset;
+        const requiredWidth = Math.max(rotatedWidth, desiredWidth * scale);
+        const ratio = requiredWidth ? Math.min(1, available / requiredWidth) : 1;
+        const width = Math.max(0, desiredWidth * ratio);
+        const height = Math.max(0, desiredHeight * ratio);
+        const effectiveOffset = offset * ratio;
+        const effectiveLift = lift * ratio;
+        const rotatedHeight = Math.abs(height * Math.cos(rotation)) +
+            Math.abs(width * Math.sin(rotation)) + 2 * effectiveOffset;
+        const stageHeight = Math.max(rotatedHeight, height * scale + 2 * effectiveLift) + 16;
+
+        stage.style.minHeight = stageHeight + 'px';
+
+        cards.forEach(function (card) {
+            card.style.width = width + 'px';
+            card.style.height = height + 'px';
+        });
+
+        root.style.setProperty('--ois-fit-ratio', ratio);
     }
 
     /*
@@ -283,6 +339,7 @@
         /*
          * Arrange the images.
          */
+        fitStack(root);
         arrangeImages(root, cards);
 
         /*
@@ -330,6 +387,14 @@
 
             initializedRoots.add(root);
 
+        }
+
+        if (!root._oisResizeObserver && window.ResizeObserver) {
+            root._oisResizeObserver = new ResizeObserver(function () {
+                fitStack(root);
+                arrangeImages(root, cards);
+            });
+            root._oisResizeObserver.observe(root);
         }
 
         root.dataset.connectionStatus = 'connected';
