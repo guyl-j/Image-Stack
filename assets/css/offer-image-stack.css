@@ -25,15 +25,21 @@
     box-sizing: border-box;
 }
 
-/* Main Flexbox layout */
+/* Main grid layout */
 
 .offer-image-stack .ois-layout {
-    display: flex;
+    display: grid;
+    --ois-list-width: 50%;
+    --ois-image-track: 1fr;
+    --ois-list-track: 1fr;
+    grid-template-areas: "image list";
+    grid-template-columns: minmax(0, var(--ois-image-track)) minmax(0, var(--ois-list-track));
     align-items: center;
     width: 100%;
     min-width: 0;
     max-width: 100%;
-    gap: 40px;
+    --ois-column-gap: 40px;
+    gap: var(--ois-column-gap);
 }
 
 /* Image area */
@@ -41,8 +47,8 @@
 .offer-image-stack .ois-image-area {
     position: relative;
     display: flex;
-    flex: 1 1 0;
-    width: 0;
+    grid-area: image;
+    width: 100%;
     min-width: 0;
     max-width: 100%;
 }
@@ -134,8 +140,8 @@
 .offer-image-stack .ois-list-area {
     position: relative;
     display: flex;
-    flex: 0 1 50%;
-    width: 50%;
+    grid-area: list;
+    width: 100%;
     min-width: 0;
     max-width: 100%;
 }
