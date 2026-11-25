@@ -2,7 +2,7 @@
 /**
  * Plugin Name: Offer Image Stack
  * Description: Interactive Elementor Image Stack and integrated Icon List widget.
- * Version: 3.1.1
+ * Version: 3.1.2
  * Author: Framework Web
  * Text Domain: offer-image-stack
  */
@@ -11,7 +11,7 @@ if ( ! defined( 'ABSPATH' ) ) {
     exit;
 }
 
-define( 'OIS_VERSION', '3.1.1' );
+define( 'OIS_VERSION', '3.1.2' );
 define( 'OIS_PATH', plugin_dir_path( __FILE__ ) );
 define( 'OIS_URL', plugin_dir_url( __FILE__ ) );
 
