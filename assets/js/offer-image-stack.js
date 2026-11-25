@@ -106,6 +106,22 @@
             return;
         }
 
+        const layout = root.querySelector('.ois-layout');
+        if (layout) {
+            const width = getComputedStyle(layout).getPropertyValue('--ois-list-width').trim() || '50%';
+            const value = parseFloat(width);
+            if (Number.isFinite(value)) {
+                if (width.endsWith('%')) {
+                    const share = Math.max(0, Math.min(100, value));
+                    layout.style.setProperty('--ois-list-track', share + 'fr');
+                    layout.style.setProperty('--ois-image-track', (100 - share) + 'fr');
+                } else {
+                    layout.style.setProperty('--ois-list-track', 'min(' + Math.max(0, value) + 'px, max(0px, calc(100% - var(--ois-column-gap, 40px))))');
+                    layout.style.setProperty('--ois-image-track', '1fr');
+                }
+            }
+        }
+
         const cards = stage.querySelectorAll('.ois-card');
         if (!cards.length) {
             return;
