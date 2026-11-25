@@ -43,11 +43,11 @@ class Offer_Image_Stack_Widget extends \Elementor\Widget_Base {
     }
 
     public function get_style_depends() {
-        return [ 'offer-image-stack' ];
+        return [ 'offer-image-stack', 'offer-image-stack-responsive' ];
     }
 
     public function get_script_depends() {
-        return [ 'offer-image-stack', 'offer-image-stack-responsive' ];
+        return [ 'offer-image-stack' ];
     }
 
     protected function register_controls() {
@@ -85,10 +85,16 @@ class Offer_Image_Stack_Widget extends \Elementor\Widget_Base {
                 'type'        => \Elementor\Controls_Manager::SELECT,
                 'default'     => 'row',
                 'options'     => $position_options,
+                'selectors_dictionary' => [
+                    'row' => '"image list"; grid-template-columns: minmax(0, var(--ois-image-track)) minmax(0, var(--ois-list-track))',
+                    'row-reverse' => '"list image"; grid-template-columns: minmax(0, var(--ois-list-track)) minmax(0, var(--ois-image-track))',
+                    'column' => '"image" "list"; grid-template-columns: minmax(0, 1fr)',
+                    'column-reverse' => '"list" "image"; grid-template-columns: minmax(0, 1fr)',
+                ],
                 'description' => 'Choose independently for desktop, tablet and mobile.',
                 'selectors'   => [
                     '{{WRAPPER}} .ois-layout' =>
-                        'flex-direction: {{VALUE}};',
+                        'grid-template-areas: {{VALUE}};',
                 ],
             ]
         );
@@ -111,7 +117,7 @@ class Offer_Image_Stack_Widget extends \Elementor\Widget_Base {
                 ],
                 'selectors' => [
                     '{{WRAPPER}} .ois-layout' =>
-                        'gap: {{SIZE}}{{UNIT}};',
+                        '--ois-column-gap: {{SIZE}}{{UNIT}}; gap: var(--ois-column-gap);',
                 ],
             ]
         );
@@ -149,6 +155,7 @@ class Offer_Image_Stack_Widget extends \Elementor\Widget_Base {
                 'label'      => 'List Width',
                 'type'       => \Elementor\Controls_Manager::SLIDER,
                 'size_units' => [ 'px', '%' ],
+                'description' => 'Percentage divides the width remaining after the gap. In stacked layouts both areas use the full width.',
                 'range'      => [
                     'px' => [
                         'min' => 100,
@@ -164,8 +171,8 @@ class Offer_Image_Stack_Widget extends \Elementor\Widget_Base {
                     'size' => 50,
                 ],
                 'selectors' => [
-                    '{{WRAPPER}} .ois-list-area' =>
-                        'width: {{SIZE}}{{UNIT}}; flex-basis: {{SIZE}}{{UNIT}};',
+                    '{{WRAPPER}} .ois-layout' =>
+                        '--ois-list-width: {{SIZE}}{{UNIT}};',
                 ],
             ]
         );
