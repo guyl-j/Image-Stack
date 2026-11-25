@@ -7,7 +7,6 @@
 /* Base layout */
 
 .offer-image-stack .ois-layout {
-    display: flex;
     width: 100%;
     min-width: 0;
 }
@@ -16,16 +15,6 @@
 .offer-image-stack .ois-list-area {
     min-width: 0;
     max-width: 100%;
-}
-
-.offer-image-stack .ois-image-area {
-    flex: 1 1 0;
-    width: 0;
-}
-
-.offer-image-stack .ois-list-area {
-    flex: 0 1 50%;
-    width: 50%;
 }
 
 .offer-image-stack .ois-stage {
